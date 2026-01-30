@@ -1,0 +1,324 @@
+version: '3'
+
+dotenv: ['.envrc', '.env']
+
+vars:
+  APP_NAME: placeholder_project_name
+  VERSION:
+    sh: git describe --tags --always --dirty
+  BUILD_TIME:
+    sh: date -u +"%Y-%m-%dT%H:%M:%SZ"
+  GO_VERSION:
+    sh: go version | awk '{print $3}'
+  BUILD_FLAGS: -ldflags "-X main.version={{.VERSION}} -X main.buildTime={{.BUILD_TIME}} -X main.goVersion={{.GO_VERSION}}"
+
+tasks:
+  default:
+    desc: Show available tasks
+    silent: true
+    cmds:
+      - task -a
+
+  # =============================================== #
+  # DEVELOPMENT
+  # =============================================== #
+  up:
+    desc: Build all app files and start development environment in Docker container
+    cmds:
+      - task: build:templates
+      - echo "Starting dev docker environment..."
+      - direnv exec . docker compose up --build -d
+    deps: [env-setup, down]
+    silent: true
+
+  up:remote:
+    desc: Build and push app files to remote docker context and run them
+    cmds:
+      - task: build:templates
+      - echo "Starting remote dev docker environment..."
+      - direnv exec . docker --context ${REMOTE_CONTEXT} compose up --build -d
+    deps: [env-setup, down:remote]
+    silent: true
+
+  run:api:
+    desc: Run the API application binary locally (no containerisation)
+    cmds:
+      - echo "Starting API service..."
+      - direnv exec . go run ./cmd/api
+    deps:
+      - task: env-setup
+      - task: check-tools
+      - task: remove
+      - task: build:templates
+    silent: true
+
+  down:
+    desc: Stop docker development environment
+    cmds:
+      - docker compose down
+    silent: true
+
+  down:remote:
+    desc: Stop all remote docker environments in given context
+    cmds:
+      - docker --context ${REMOTE_CONTEXT} compose down
+    silent: true
+
+  # =============================================== #
+  # BUILD
+  # =============================================== #
+  build:api-service:
+    desc: Build main API binary
+    cmds:
+      - echo "Building API service..."
+      - mkdir -p ./bin
+      - GOOS=linux CGO_ENABLED=0 go build {{.BUILD_FLAGS}} -o=./bin/apiService ./cmd/api
+    # vars:
+    #   LOG_TO_DB: false
+    deps:
+      - task: build:templates
+    generates:
+      - bin/apiService
+    silent: true
+
+  build:templates:
+    desc: Build templ templates into /ui
+    cmds:
+      - echo 'Generating templ templates...'
+      - cd ./web && templ generate
+      - echo 'Done'
+    deps:
+      - task: check-tools
+      - task: build:static
+    silent: true
+
+  build:static:
+    desc: Update static files in Go service directories
+    cmds:
+      - echo "Updating static files..."
+      - rm -rf ./cmd/api/static
+      - cp -r ./web/static ./cmd/api
+    silent: true
+
+  # =============================================== #
+  # DATABASE
+  # =============================================== #
+  db:user:
+    desc: Connect to user database via psql
+    cmds:
+      - docker exec -it user-db psql -U ${USER_DB_USER} -d ${USER_DB_NAME} -w
+    silent: true
+
+  db:user:mig-new:
+    desc: Create a new migration file for the User db (run with `db:user:mig-new NAME=___`)
+    cmds:
+      - echo "Creating migration files for {{.NAME}}"
+      - migrate create -seq -ext=.sql -dir=./db/user/migrations {{.NAME}}
+    silent: true
+
+  db:user:mig-up:
+    desc: Run all "up" migrations on User DB
+    cmds:
+      - echo "Running up migrations..."
+      # - migrate -path ./db/user/migrations -database "${USER_DB_DSN}" up
+      - |
+        docker run --rm \
+          --network ${PROJECT_NAME}_users \
+          -v {{.ROOT_DIR}}/db/user/migrations:/migrations \
+          migrate/migrate \
+          -path=/migrations \
+          -database "${USER_DB_DSN}" \
+          up
+    silent: true
+
+  db:user:mig-down:
+    desc: Run all "down" migrations on User DB
+    cmds:
+      - echo "Running down migrations..."
+      # - migrate -path ./db/user/migrations -database "${USER_DB_DSN}" down
+      - |
+        docker run --rm \
+          --network ${PROJECT_NAME}_users \
+          -v {{.ROOT_DIR}}/db/user/migrations:/migrations \
+          migrate/migrate \
+          -path=/migrations \
+          -database "${USER_DB_DSN}" \
+          down
+    silent: true
+
+  db:user:mig-drop:
+    desc: Drop all migrations on User DB, to start with a clean slate
+    cmds:
+      - echo "Running migrate drop..."
+      # - migrate -path ./db/user/migrations -database "${USER_DB_DSN}" down
+      - |
+        docker run --rm \
+          --network ${PROJECT_NAME}_users \
+          -v {{.ROOT_DIR}}/db/user/migrations:/migrations \
+          migrate/migrate \
+          -path=/migrations \
+          -database "${USER_DB_DSN}" \
+          drop -f
+    silent: true
+
+  # =============================================== #
+  # QUALITY CONTROL
+  # =============================================== #
+  audit:
+    desc: Tidy dependencies and format, vet, and test all code
+    cmds:
+      - echo "Formatting code..."
+      - go fmt ./...
+      - echo "Vetting code..."
+      - go vet ./...
+      - staticcheck ./...
+      - echo "Running tests..."
+      - go test -race -vet=off ./...
+    deps:
+      - vendor
+  
+  vendor:
+    desc: Tidy go project, and store source code for dependencies in vendor folder
+    cmds:
+      - echo "Tidying and verifying module dependencies..."
+      - go mod tidy
+      - go mod verify
+      - echo "Vendoring dependencies..."
+      - go mod vendor
+    silent: true
+
+  clean:
+    desc: Clear the cache
+    cmds:
+      - echo "Cleaning go cache..."
+      - go clean
+    silent: true
+
+  remove:
+    desc: Run go clean and remove built binaries
+    cmds:
+      - task: clean
+      - echo "Removing built binaries..."
+      - rm -r ./bin/*
+
+  # =============================================== #
+  # HELPERS
+  # =============================================== #
+  env-setup:
+    desc: Ensure .envrc exists, and ensure a linked .env file exists
+    cmds:
+      - echo "Setting up development environment..."
+      - |
+        if [ ! -f .envrc ]; then
+          echo "Creating .envrc from example..."
+          cp .envrc.example .envrc
+          echo "⚠️  Please populate .envrc with your development secrets!"
+          exit 1
+        fi
+      - |
+        if [ ! -L .env ]; then
+          echo "Creating symbolic link to .envrc..."
+          ln -s .envrc .env
+        fi
+    silent: true
+
+  # =============================================== #
+  # DEV OPS
+  # =============================================== #
+  drop-volumes:
+    desc: Drop all docker volumes related to the project, to start with a clean slate
+    cmds:
+      - echo "Dropping all created docker volumes..."
+      - docker compose down -v
+    silent: true
+
+  drop-volumes:remote:
+    desc: Drop all remote docker volumes related to the project, to start with a clean slate
+    cmds:
+      - echo "Dropping all created remote docker volumes..."
+      - docker --context ${REMOTE_CONTEXT} compose down -v
+    silent: true
+
+  logs:
+    desc: Print logs from Docker Compose
+    cmds:
+      - docker compose logs -f
+    silent: true
+
+  logs:remote:
+    desc: Print logs from remote instance of Docker Compose app
+    cmds:
+      - docker --context ${REMOTE_CONTEXT} logs -f
+    silent: true
+
+  logs:file:
+    desc: Print logs from app.log file in Docker container
+    cmds:
+      - docker exec api-service tail -n 100 /var/log/${PROJECT_NAME}/app.log | jq '.'
+    silent: true
+
+  logs:file:error:
+    desc: Print ERROR logs from app.log file in Docker container
+    cmds:
+      - docker exec api-service grep '"level":"ERROR"' /var/log/${PROJECT_NAME}/app.log | jq '.'
+    silent: true
+
+  check-tools:
+    desc: "Check for existence of all required dev tools, attempt to install if missing"
+    deps: [check-go, check-templ, check-migrate]
+    silent: true
+
+  check-go:
+    desc: "Check for Go availability on $PATH, exit on fail"
+    # dir: "{{.USER_WORKING_DIR}}"
+    cmds:
+      - |
+        if ! command -v go &> /dev/null; then
+          echo "❌ Go is not installed or is not available in PATH."
+          echo "👉 Exiting process - go to go.dev/doc/install to install Go."
+          exit 1
+        else
+          echo "✅ Go is installed and available."
+        fi
+    internal: true
+    silent: true
+
+  check-templ:
+    desc: "Check for templ (go html templating) and install it if missing"
+    # dir: "{{.USER_WORKING_DIR}}"
+    cmds:
+      - |
+        if ! command -v templ &> /dev/null; then
+          go install github.com/a-h/templ/cmd/templ@latest
+          if ! command -v templ &> /dev/null; then
+            echo "❌ templ could not be installed or is not available in PATH."
+            echo "👉 Exiting process - try installing templ manually."
+            exit 1
+          else
+            echo "✅ templ is installed and available."
+          fi
+        else
+          echo "✅ templ is installed and available."
+        fi
+    internal: true
+    silent: true
+
+  check-migrate:
+    desc: "Check for migrate (db migrations) and install it if missing"
+    # dir: "{{.USER_WORKING_DIR}}"
+    cmds:
+      - |
+        if ! command -v migrate &> /dev/null; then
+          go install github.com/golang-migrate/migrate/v4
+          if ! command -v migrate &> /dev/null; then
+            echo "❌ migrate could not be installed or is not available in PATH."
+            echo "👉 Exiting process - try installing migrate manually."
+            exit 1
+          else
+            echo "✅ migrate is installed and available."
+          fi
+        else
+          echo "✅ migrate is installed and available."
+        fi
+    internal: true
+    silent: true

@@ -1,0 +1,20 @@
+# Environment & Config
+.env
+.envrc
+Caddyfile
+*client_secret*.json
+certs/
+
+# Binaries & Generated Files
+bin/
+*_templ.go
+cmd/api/assets/
+cmd/api/static/
+cmd/api/ui/
+
+# Database
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+data.sql

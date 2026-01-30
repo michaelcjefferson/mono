@@ -1,0 +1,54 @@
+# Project
+export ENVIRONMENT=development
+export COMPOSE_PROJECT_NAME=placeholder_project_name
+export PROJECT_NAME=placeholder_project_name
+export CONTACT_EMAIL=placeholder_project_email
+export PROJECT_REPO_TAG=placeholder_project_tag
+
+# API Server
+export API_PORT=8084
+export API_HOST=localhost
+export API_READ_TIMEOUT=30s
+export API_WRITE_TIMEOUT=30s
+export API_IDLE_TIMEOUT=1m
+export API_LIMITER_ENABLED=false
+export API_LIMITER_RPS=2
+export API_LIMITER_BURST=4
+
+# TLS
+export HTTPS_ON=false
+export CERT_PATH=./tls/cert.pem
+export KEY_PATH=./tls/key.pem
+
+# Domains - update to production URL
+export DOMAIN_MAIN=localhost
+
+# Auth
+export JWT_SECRET=secret
+export JWT_EXPIRATION=24h
+export JWT_REFRESH=6h
+export BCRYPT_COST=12
+
+# Google
+export GOOGLE_CLIENT_ID=id
+export GOOGLE_CLIENT_SECRET=secret
+export GOOGLE_REDIRECT_URL=https://localhost/oauth/google/callback
+
+# Logging
+export LOG_LEVEL=1
+export LOG_TO_DB=true
+# export LOG_FORMAT=json
+
+# Postgres user db
+# DSN should be as follows: postgres://*db-username*:*db-password*@*ip-address*:*port*/*db-name*
+#! the ?sslmode=disable parameter should be removed in production, once SSL has been set up
+export USER_DB_HOST=user-db
+export USER_DB_PORT=5432
+export USER_DB_NAME=users
+export USER_DB_USER=user
+export USER_DB_PASSWORD=password
+export USER_DB_SSL_MODE=disable
+export USER_DB_MAX_OPEN_CONNS=10
+export USER_DB_MAX_IDLE_CONNS=25
+export USER_DB_MAX_IDLE_TIME=5m
+export USER_DB_DSN=postgres://${USER_DB_USER}:${USER_DB_PASSWORD}@${USER_DB_HOST}:${USER_DB_PORT}/${USER_DB_NAME}?sslmode=${USER_DB_SSL_MODE}
