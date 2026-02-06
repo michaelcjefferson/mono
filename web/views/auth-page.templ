@@ -1,0 +1,23 @@
+package views
+
+import (
+  "placeholder_project_tag/web/components"
+)
+
+templ AuthPage(formType string) {
+  @Base() {
+    if formType == "register" {
+      <h2 class="header">Register</h2>
+      <p>It's magic here.</p>
+      @components.GoogleAuthButton()
+      @components.AuthDivider()
+      @components.RegisterForm()
+    } else if formType == "sign-in" {
+      <h2 class="header">Sign In</h2>
+      <p>Get involved.</p>
+      @components.GoogleAuthButton()
+      @components.AuthDivider()
+      @components.SignInForm()
+    }
+  }
+}

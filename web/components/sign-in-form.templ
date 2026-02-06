@@ -1,0 +1,157 @@
+package components
+
+templ SignInForm() {
+  <div x-data="signInForm()" class="auth-container">
+    <form @submit.prevent="handleSubmit" id="sign-in-form" class="user-form">
+
+      <!-- Username/Email field -->
+      <div class="form-field">
+        <label for="username-or-email">Username/Email</label>
+        <input 
+          type="text" 
+          id="username-or-email" 
+          name="username-or-email" 
+          x-model="form.usernameOrEmail"
+          :class="{'error': errors.usernameOrEmail}"
+          @input="clearFieldError('usernameOrEmail')"
+          required
+        />
+        <span 
+          x-show="errors.username" 
+          x-text="errors.username"
+          class="field-error"
+        ></span>
+      </div>
+
+      <!-- Password field -->
+      <div class="form-field">
+        <label for="password">Password</label>
+        <input 
+          type="password" 
+          id="password" 
+          name="password"
+          x-model="form.password"
+          :class="{'error': errors.password}"
+          @input="clearFieldError('password')"
+          required
+        />
+        <span 
+          x-show="errors.password" 
+          x-text="errors.password"
+          class="field-error"
+        ></span>
+      </div>
+
+      <button
+        type="submit"
+        :disabled="loading"
+        :class="{'loading': loading}">
+        <span x-show="!loading">Sign In</span>
+        <span x-show="loading">Signing in...</span>
+      </button>
+    </form>
+
+    @AuthDivider()
+
+    @LinkButton("/register", "Register")
+  </div>
+
+  <script>
+    function signInForm() {
+      return {
+        form: {
+          usernameOrEmail: '',
+          password: ''
+        },
+        errors: {},
+        loading: false,
+
+        clearFieldError(field) {
+          delete this.errors[field];
+        },
+
+        async handleSubmit() {
+          // Clear previous errors
+          this.errors = {};
+          this.loading = true;
+
+          try {
+            const csrfToken = getCSRFCookie('_csrf')
+            const res = await fetch('/sign-in', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                "X-CSRF-Token": csrfToken
+              },
+              body: JSON.stringify({
+                usernameOrEmail: this.form.usernameOrEmail,
+                password: this.form.password
+              })
+            });
+
+            const data = await res.json();
+
+            console.log(data);
+
+            if (!res.ok) {
+              this.handleError(data.error);
+              return;
+            }
+
+            // Success
+            this.$store.toast.success('Signed in successfully!');
+            
+            // Redirect after short delay to show success message
+            setTimeout(() => {
+              if (data.redirect) {
+                window.location.href = data.redirect;
+              } else {
+                window.location.href = '/dashboard';
+              }
+            }, 400);
+
+          } catch (err) {
+            console.error('Sign in error:', err);
+            this.$store.toast.error('Network error. Please check your connection and try again.');
+          } finally {
+            this.loading = false;
+          }
+        },
+
+        handleError(error) {
+          switch (error.code) {
+            case 'FAILED_VALIDATION':
+              // Map server field names to form field names
+              if (error.details) {
+                this.errors = this.mapServerErrors(error.details);
+              }
+              this.$store.toast.error(error.message || 'Please fix the errors below');
+              break;
+            
+            default:
+              this.$store.toast.error(error.message || 'Sign in failed. Please try again.');
+          }
+          console.log(this.errors);
+        },
+
+        mapServerErrors(serverErrors) {
+          const mapped = {};
+          
+          // Map server field names to client field names
+          const fieldMap = {
+            'usernameOrEmail': 'usernameOrEmail',
+            'password': 'password'
+          };
+
+          for (const [serverField, message] of Object.entries(serverErrors)) {
+            const clientField = fieldMap[serverField] || serverField;
+            mapped[clientField] = message;
+          }
+
+          return mapped;
+        }
+      }
+    }
+  </script>
+}

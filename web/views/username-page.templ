@@ -1,0 +1,143 @@
+package views
+
+import (
+  "placeholder_project_tag/internal/data"
+)
+
+templ UsernamePage(u *data.User) {
+  @Base() {
+    <div x-data="usernameChangeForm()">
+      if u.UserName != "" {
+        <p>Old Username: <span class="error-text">{ u.UserName }</span></p>
+      }
+
+      <form @submit.prevent="handleSubmit" id="username-form" class="user-form">
+        <div class="form-field">
+          <label for="username">Username:</label>
+          <input
+            type="text"
+            id="username"
+            name="username"
+            x-model="form.username"
+            :class="{'error': errors.username}"
+            @input="clearFieldError('username')"
+            required
+          />
+          <span
+            x-show="errors.username"
+            x-text="errors.username"
+            class="field-error"
+          ></span>
+        </div>
+
+        <button
+          type="submit"
+          :disabled="loading"
+          :class="{'loading': loading}">
+          <span x-show="!loading">Save</span>
+          <span x-show="loading">Saving...</span>
+        </button>
+      </form>
+    </div>
+
+    <script>
+      function usernameChangeForm() {
+        return {
+          form: {
+            username: ''
+          },
+          errors: {},
+          loading: false,
+
+          clearFieldError(field) {
+            delete this.errors[field];
+          },
+
+          async handleSubmit() {
+            this.errors = {};
+            this.loading = true;
+
+            try {
+              const csrfToken = getCSRFCookie('_csrf')
+              const res = await fetch('/profile/username/update', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Accept': 'application/json',
+                  "X-CSRF-Token": csrfToken
+                },
+                body: JSON.stringify({
+                  username: this.form.username
+                })
+              });
+
+              const data = await res.json();
+
+              console.log(data);
+
+              if (!res.ok) {
+                this.handleError(data.error);
+                return;
+              }
+
+              // Success
+              this.$store.toast.success('Saved username successfully!');
+              
+              // Redirect after short delay to show success message
+              setTimeout(() => {
+                if (data.redirect) {
+                  window.location.href = data.redirect;
+                } else {
+                  window.location.href = '/dashboard';
+                }
+              }, 400);
+
+            } catch (err) {
+              console.error('Sign in error:', err);
+              this.$store.toast.error('Network error. Please check your connection and try again.');
+            } finally {
+              this.loading = false;
+            }
+          },
+
+          handleError(error) {
+            switch (error.code) {
+              case 'FAILED_VALIDATION':
+                // Map server field names to form field names
+                if (error.details) {
+                  this.errors = this.mapServerErrors(error.details);
+                }
+                this.$store.toast.error(error.message || 'Please fix the errors below');
+                break;
+
+              case 'USERNAME_TAKEN':
+                this.errors.username = 'This username is already taken';
+                this.$store.toast.error('Username unavailable');
+                break;
+              
+              default:
+                this.$store.toast.error(error.message || 'Username update failed. Please try again.');
+            }
+            console.log(this.errors);
+          },
+
+          mapServerErrors(serverErrors) {
+            const mapped = {};
+            
+            // Map server field names to client field names
+            const fieldMap = {
+              'username': 'username'
+            };
+
+            for (const [serverField, message] of Object.entries(serverErrors)) {
+              const clientField = fieldMap[serverField] || serverField;
+              mapped[clientField] = message;
+            }
+
+            return mapped;
+          }
+        }
+      }
+    </script>
+  }
+}

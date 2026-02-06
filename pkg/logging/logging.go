@@ -90,7 +90,7 @@ func WithMinLevel(level Level) LoggerOption {
 	}
 }
 
-// Creates a new Logger instance, with optional LoggerOption functions to set Logger properties. Usage: `logger := logging.New(os.Stdout, logging.WithDatabase(logRepo), logging.WithService("api"), logging.WithMinLevel(logging.LevelInfo))`
+// Creates a new Logger instance, with optional LoggerOption functions to set Logger details. Usage: `logger := logging.New(os.Stdout, logging.WithDatabase(logRepo), logging.WithService("api"), logging.WithMinLevel(logging.LevelInfo))`
 func New(out io.Writer, opts ...LoggerOption) *Logger {
 	logger := &Logger{
 		out:      out,

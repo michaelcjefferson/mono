@@ -1,0 +1,41 @@
+package components
+
+templ ToastContainer() {
+  <div 
+    x-data
+    class="toast-container"
+    role="region"
+    aria-live="polite"
+  >
+    <template x-for="toast in $store.toast.items" :key="toast.id">
+      <div
+        x-show="toast.show"
+        x-transition:enter="toast-enter"
+        x-transition:enter-start="toast-enter-start"
+        x-transition:enter-end="toast-enter-end"
+        x-transition:leave="toast-leave"
+        x-transition:leave-start="toast-leave-start"
+        x-transition:leave-end="toast-leave-end"
+        :class="'toast toast-' + toast.type"
+        class="toast"
+      >
+        <div class="toast-content">
+          <!-- Icon based on type -->
+          <span class="toast-icon" x-show="toast.type === 'success'">✓</span>
+          <span class="toast-icon" x-show="toast.type === 'error'">!</span>
+          <span class="toast-icon" x-show="toast.type === 'info'">ℹ</span>
+          <span class="toast-icon" x-show="toast.type === 'warning'">⚠</span>
+          
+          <p x-text="toast.message"></p>
+        </div>
+        <button 
+          @click="$store.toast.hide(toast.id)" 
+          class="toast-close"
+          aria-label="Close notification"
+        >
+          &times;
+        </button>
+      </div>
+    </template>
+  </div>
+}

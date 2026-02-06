@@ -1,0 +1,9 @@
+package views
+
+import "placeholder_project_tag/pkg/apperrors"
+
+templ ErrorPage(err apperrors.HTTPError) {
+  @Base() {
+    <h2><strong>Error:</strong> { err.Message }</h2>
+  }
+}

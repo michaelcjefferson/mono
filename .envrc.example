@@ -6,8 +6,8 @@ export CONTACT_EMAIL=placeholder_project_email
 export PROJECT_REPO_TAG=placeholder_project_tag
 
 # API Server
-export API_PORT=8084
 export API_HOST=localhost
+export API_PORT=8084
 export API_READ_TIMEOUT=30s
 export API_WRITE_TIMEOUT=30s
 export API_IDLE_TIMEOUT=1m
@@ -32,23 +32,18 @@ export BCRYPT_COST=12
 # Google
 export GOOGLE_CLIENT_ID=id
 export GOOGLE_CLIENT_SECRET=secret
-export GOOGLE_REDIRECT_URL=https://localhost/oauth/google/callback
+# export GOOGLE_REDIRECT_URL=https://localhost/oauth/google/callback
+export GOOGLE_REDIRECT_URL=${DOMAIN_MAIN}:${API_PORT}/oauth/google/callback
 
 # Logging
 export LOG_LEVEL=1
 export LOG_TO_DB=true
 # export LOG_FORMAT=json
 
-# Postgres user db
-# DSN should be as follows: postgres://*db-username*:*db-password*@*ip-address*:*port*/*db-name*
-#! the ?sslmode=disable parameter should be removed in production, once SSL has been set up
-export USER_DB_HOST=user-db
-export USER_DB_PORT=5432
-export USER_DB_NAME=users
-export USER_DB_USER=user
-export USER_DB_PASSWORD=password
-export USER_DB_SSL_MODE=disable
-export USER_DB_MAX_OPEN_CONNS=10
-export USER_DB_MAX_IDLE_CONNS=25
-export USER_DB_MAX_IDLE_TIME=5m
-export USER_DB_DSN=postgres://${USER_DB_USER}:${USER_DB_PASSWORD}@${USER_DB_HOST}:${USER_DB_PORT}/${USER_DB_NAME}?sslmode=${USER_DB_SSL_MODE}
+# Database
+export BACKUP_ENABLED=false
+export APP_DB_PATH=./db/app.db
+export MONITOR_DB_PATH=./db/monitor.db
+
+# Remote - in case a remote Docker context is being used (used by Taskfile)
+export REMOTE_CONTEXT=docker-context

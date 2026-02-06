@@ -1,0 +1,8 @@
+package components
+
+templ LinkButton(href, text string) {
+  <div class="card">
+    // href variable will be auto-sanitised by templ - ignore error indicator here
+    <a href={ href } class="button-link">{ text }</a>
+  </div>
+}

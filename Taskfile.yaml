@@ -44,13 +44,14 @@ tasks:
     desc: Run the API application binary locally (no containerisation)
     cmds:
       - echo "Starting API service..."
-      - direnv exec . go run ./cmd/api
+      - direnv exec . go run -tags "fts5" ./cmd/api
     deps:
       - task: env-setup
       - task: check-tools
-      - task: remove
+      # - task: remove
+      - task: build:migrations
       - task: build:templates
-    silent: true
+    # silent: true
 
   down:
     desc: Stop docker development environment
@@ -72,11 +73,12 @@ tasks:
     cmds:
       - echo "Building API service..."
       - mkdir -p ./bin
-      - GOOS=linux CGO_ENABLED=0 go build {{.BUILD_FLAGS}} -o=./bin/apiService ./cmd/api
+      - GOOS=linux CGO_ENABLED=1 go build {{.BUILD_FLAGS}} -tags "linux sqlite_fts5" -o=./bin/apiService ./cmd/api
     # vars:
     #   LOG_TO_DB: false
     deps:
       - task: build:templates
+      - task: build:migrations
     generates:
       - bin/apiService
     silent: true
@@ -100,65 +102,47 @@ tasks:
       - cp -r ./web/static ./cmd/api
     silent: true
 
+  build:migrations:
+    desc: Update migration files in Go service directories
+    cmds:
+      - echo "Updating migration files..."
+      - rm -rf ./cmd/api/app
+      - mkdir ./cmd/api/app
+      - cp -r ./db/app/migrations ./cmd/api/app/migrations
+      - rm -rf ./cmd/api/monitor
+      - mkdir ./cmd/api/monitor
+      - cp -r ./db/monitor/migrations ./cmd/api/monitor/migrations
+    silent: true
+
   # =============================================== #
   # DATABASE
   # =============================================== #
-  db:user:
-    desc: Connect to user database via psql
+  db:app:
+    desc: Connect to app database via sqlite3
+    # TODO: TEST
     cmds:
-      - docker exec -it user-db psql -U ${USER_DB_USER} -d ${USER_DB_NAME} -w
+      - docker exec -it api-service sqlite3 ./db/app/app.db
     silent: true
 
-  db:user:mig-new:
-    desc: Create a new migration file for the User db (run with `db:user:mig-new NAME=___`)
+  db:app:mig-new:
+    desc: Create a new migration file for the App db (run with `db:app:mig-new NAME=___`)
     cmds:
       - echo "Creating migration files for {{.NAME}}"
-      - migrate create -seq -ext=.sql -dir=./db/user/migrations {{.NAME}}
+      - migrate create -seq -ext=.sql -dir=./db/app/migrations {{.NAME}}
     silent: true
 
-  db:user:mig-up:
-    desc: Run all "up" migrations on User DB
+  db:monitor:
+    desc: Connect to monitor database via sqlite3
+    # TODO: TEST
     cmds:
-      - echo "Running up migrations..."
-      # - migrate -path ./db/user/migrations -database "${USER_DB_DSN}" up
-      - |
-        docker run --rm \
-          --network ${PROJECT_NAME}_users \
-          -v {{.ROOT_DIR}}/db/user/migrations:/migrations \
-          migrate/migrate \
-          -path=/migrations \
-          -database "${USER_DB_DSN}" \
-          up
+      - docker exec -it api-service sqlite3 ./db/monitor/monitor.db
     silent: true
 
-  db:user:mig-down:
-    desc: Run all "down" migrations on User DB
+  db:monitor:mig-new:
+    desc: Create a new migration file for the Monitor db (run with `db:monitor:mig-new NAME=___`)
     cmds:
-      - echo "Running down migrations..."
-      # - migrate -path ./db/user/migrations -database "${USER_DB_DSN}" down
-      - |
-        docker run --rm \
-          --network ${PROJECT_NAME}_users \
-          -v {{.ROOT_DIR}}/db/user/migrations:/migrations \
-          migrate/migrate \
-          -path=/migrations \
-          -database "${USER_DB_DSN}" \
-          down
-    silent: true
-
-  db:user:mig-drop:
-    desc: Drop all migrations on User DB, to start with a clean slate
-    cmds:
-      - echo "Running migrate drop..."
-      # - migrate -path ./db/user/migrations -database "${USER_DB_DSN}" down
-      - |
-        docker run --rm \
-          --network ${PROJECT_NAME}_users \
-          -v {{.ROOT_DIR}}/db/user/migrations:/migrations \
-          migrate/migrate \
-          -path=/migrations \
-          -database "${USER_DB_DSN}" \
-          drop -f
+      - echo "Creating migration files for {{.NAME}}"
+      - migrate create -seq -ext=.sql -dir=./db/monitor/migrations {{.NAME}}
     silent: true
 
   # =============================================== #
@@ -249,18 +233,6 @@ tasks:
     desc: Print logs from remote instance of Docker Compose app
     cmds:
       - docker --context ${REMOTE_CONTEXT} logs -f
-    silent: true
-
-  logs:file:
-    desc: Print logs from app.log file in Docker container
-    cmds:
-      - docker exec api-service tail -n 100 /var/log/${PROJECT_NAME}/app.log | jq '.'
-    silent: true
-
-  logs:file:error:
-    desc: Print ERROR logs from app.log file in Docker container
-    cmds:
-      - docker exec api-service grep '"level":"ERROR"' /var/log/${PROJECT_NAME}/app.log | jq '.'
     silent: true
 
   check-tools:

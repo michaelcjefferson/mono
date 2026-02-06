@@ -1,0 +1,44 @@
+package components
+
+import "placeholder_project_tag/internal/data"
+
+templ NavBar(u *data.User) {
+  <div class="nav-container">
+    if u != nil {
+      <h3 class="welcome-message">Welcome, { u.UserName }</h3>
+    }
+    
+    <nav>
+      <ul>
+        <li class="nav-item">
+          <a class="nav-link" href="/">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/messages">Messages</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/profile/username">Profile</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/settings">Settings</a>
+        </li>
+      </ul>
+    </nav>
+
+    @LogOutButton()
+
+    @Footer()
+  </div>
+
+
+  <script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const currentPath = window.location.pathname;
+    document.querySelectorAll("nav a").forEach(link => {
+      if (link.getAttribute("href") === currentPath) {
+        link.classList.add("active");
+      }
+    });
+  });
+</script>
+}

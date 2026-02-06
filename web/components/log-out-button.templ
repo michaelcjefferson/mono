@@ -1,0 +1,45 @@
+package components
+
+templ LogOutButton() {
+  <div class="card">
+    <button id="log-out-button">Log Out</button>
+  </div>
+
+  <script>
+    document.getElementById("log-out-button").addEventListener("click", async function(event) {
+      const csrfToken = getCSRFCookie('_csrf')
+
+      let res = await fetch('/log-out', {
+        method: 'POST',
+        credentials: 'include',
+        redirect: 'follow',
+        headers: {
+          "Accept": "application/json",
+          "X-CSRF-Token": csrfToken
+        }
+      })
+
+      if (res.redirected) {
+        // Get the redirect URL from the Location header
+        let redirectUrl = res.url;
+        // Redirect the user manually
+        window.location.href = redirectUrl;
+        return;
+      }
+
+      let j = await res.json();
+
+      // Check if response is OK (status 200-299)
+      if (res.ok) {
+        console.log('Successfully logged out.');
+      } else {
+        // If it's not a redirect or successful response, check for JSON error
+        console.error('Logout error:', j.error);
+        alert('Logout failed: ' + j.error);
+      }
+      if (j.redirect) {
+        window.location.href = j.redirect;
+      }
+    });
+  </script>
+}

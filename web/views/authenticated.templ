@@ -1,0 +1,23 @@
+package views
+
+import (
+  "placeholder_project_tag/internal/data"
+  "placeholder_project_tag/web/components"
+)
+
+templ Authenticated(u *data.User, showNav bool) {
+  @Base() {
+    <div class="layout-container">
+      if showNav {
+        @components.NavBar(u)
+        <div class="main-content nav-margin">
+          { children... }
+        </div>
+      } else {
+        <div class="main-content">
+          { children... }
+        </div>
+      }
+    </div>
+  }
+}

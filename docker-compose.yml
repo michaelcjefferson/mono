@@ -10,42 +10,15 @@ services:
     restart: always
     ports:
       - 8084:8084
-    # TODO: Switch to individual env vars, so that secret managers can more easily be used?
     env_file:
       - .env
     volumes:
-      - app-logs:/var/log/${PROJECT_NAME}
+      # - db_data:/data
+      - db_data:/app/db
+    # user: "65532:65532"
     deploy:
       mode: replicated
       replicas: 1
-    networks:
-      - entrypoints
-      - users
-
-  user-db:
-    image: postgres:18.1-alpine
-    container_name: user-db
-    restart: always
-    environment:
-      POSTGRES_DB: ${USER_DB_NAME}
-      POSTGRES_USER: ${USER_DB_USER}
-      POSTGRES_PASSWORD: ${USER_DB_PASSWORD}
-    ports:
-      - 5432:5432
-    volumes:
-      - userdb:/var/lib/postgresql/data # Persistent storage over restarts
-      - ./db/user/init.sql:/docker-entrypoint-initdb.d/init.sql:ro # Add custom init commands to run on db set up
-    networks:
-      - users
 
 volumes:
-  app-logs:
-    driver: local
-  userdb:
-    driver: local
-
-networks:
-  entrypoints:
-    internal: false
-  users:
-    internal: true
+  db_data:

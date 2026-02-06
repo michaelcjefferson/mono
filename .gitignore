@@ -11,6 +11,8 @@ bin/
 cmd/api/assets/
 cmd/api/static/
 cmd/api/ui/
+cmd/api/app/
+cmd/api/monitor/
 
 # Database
 *.db

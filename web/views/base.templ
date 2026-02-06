@@ -1,0 +1,23 @@
+package views
+
+import "placeholder_project_tag/web/components"
+
+templ Base() {
+  <!doctype html>
+  <html lang="en">
+    @components.Head()
+    <body>
+      <div id="app">
+        { children... }
+
+        @components.ToastContainer()
+      </div>
+      <script>
+        function getCSRFCookie() {
+          const match = document.cookie.match(/(?:^|;\s*)_csrf=([^;]*)/);
+          return match ? decodeURIComponent(match[1]) : null;
+        }
+      </script>
+    </body>
+  </html>
+}

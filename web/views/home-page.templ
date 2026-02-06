@@ -1,0 +1,13 @@
+package views
+
+import (
+  "placeholder_project_tag/internal/data"
+  "placeholder_project_tag/web/components"
+)
+
+templ HomePage(u *data.User) {
+  @Authenticated(u, true) {
+    @components.Hero("placeholder_project_name")
+    <h3>From the Go App Kitchen</h3>
+  }
+}
