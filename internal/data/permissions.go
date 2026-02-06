@@ -16,6 +16,7 @@ var (
 // User Permissions
 const (
 	PermissionAdminAccess Permission = "admin:access"
+	PermissionAdminCreate Permission = "admin:create"
 	PermissionUserAccess  Permission = "user:access"
 )
 
@@ -48,10 +49,9 @@ type PermissionsModel struct {
 // Get slice of Permissions for the provided ID number
 func (m *PermissionsModel) GetAllForUserID(ctx context.Context, id int64) ([]Permission, error) {
 	query := `
-		SELECT p.code
-		FROM permissions p
-		JOIN users_permissions up ON up.permission_id = p.id
-		WHERE up.user_id = $1;
+		SELECT permission_code
+		FROM users_permissions
+		WHERE user_id = $1;
 	`
 
 	args := []any{id}
@@ -99,9 +99,8 @@ func (m *PermissionsModel) GetOneForUserID(ctx context.Context, id int64, p Perm
 	q := `
 		SELECT EXISTS (
 			SELECT 1
-			FROM permissions p
-			JOIN users_permissions up ON up.permission_id = p.id
-			WHERE up.user_id = $1 AND p.code = $2
+			FROM users_permissions
+			WHERE user_id = $1 AND permission_code = $2
 		);`
 
 	var hasPermission bool
@@ -116,34 +115,32 @@ func (m *PermissionsModel) GetOneForUserID(ctx context.Context, id int64, p Perm
 	return hasPermission, nil
 }
 
+// TODO: build dynamic query by looping over perms and adding (?, ?) to a []string for each, then run query once
 func (m *PermissionsModel) InsertManyForUserID(tx *sql.Tx, ctx context.Context, perms []Permission, userID int64) error {
 	permQuery, err := tx.PrepareContext(ctx, `
 		INSERT INTO users_permissions (user_id, permission_id)
-		SELECT ?, id
-		FROM permissions
-		WHERE code IN (`+Placeholders(len(perms))+`) 
+		VALUES ($1, $2)
 		ON CONFLICT DO NOTHING;`)
 	if err != nil {
 		return err
 	}
 	defer permQuery.Close()
 
-	args := []any{userID}
-
 	for _, p := range perms {
 		if !p.IsValid() {
 			return ErrInvalidPermission
 		}
-		args = append(args, string(p))
-	}
 
-	_, err = permQuery.ExecContext(ctx, args...)
-	if err != nil {
-		switch {
-		case errors.Is(err, sql.ErrNoRows):
-			return ErrRecordNotFound
-		default:
-			return err
+		args := []any{userID, string(p)}
+
+		_, err = permQuery.ExecContext(ctx, args...)
+		if err != nil {
+			switch {
+			case errors.Is(err, sql.ErrNoRows):
+				return ErrRecordNotFound
+			default:
+				return err
+			}
 		}
 	}
 

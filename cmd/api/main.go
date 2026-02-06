@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -13,15 +14,14 @@ import (
 
 	"golang.org/x/oauth2"
 
-	// Allows struct tags that read .env vars into struct fields, with features such as default values and required env vars
-
-	// Provide mem/cpu leak analysis at /debug/pprof
-
 	"net/http"
+	// Provide mem/cpu leak analysis at /debug/pprof
 	_ "net/http/pprof"
 
-	// go-sqlite3 isn't being used directly in this file - it is instead registered with database/sql. So, alias go-sqlite3 import to _ to prevent the Go compiler from complaining that it isn't being used
+	// Allows struct tags that read .env vars into struct fields, with features such as default values and required env vars
 	"github.com/caarlos0/env/v10"
+
+	// go-sqlite3 isn't being used directly in this file - it is instead registered with database/sql. So, alias go-sqlite3 import to _ to prevent the Go compiler from complaining that it isn't being used
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -67,19 +67,6 @@ func main() {
 	fmt.Println("attempting to set up monitoring db")
 
 	monitorDB, err := openMonitorDB(cfg)
-	if monitorDB == nil {
-		if err != nil {
-			log.Printf("error returned from openMonitorDB: %v\n", err)
-		}
-		dirs, err := os.ReadDir(".")
-		if err != nil {
-			log.Printf("error reading dirs: %v", err)
-		}
-		for _, dir := range dirs {
-			log.Printf("found: %v\nis dir: %v", dir.Name(), dir.IsDir())
-		}
-		panic(fmt.Sprintf("couldn't set up monitor db\ndb path: %s", cfg.DB.MonitorDBPath))
-	}
 	if err != nil {
 		log.Printf("error setting up monitor database: %v\n", err)
 		time.Sleep(20 * time.Second)
@@ -89,19 +76,6 @@ func main() {
 	fmt.Println("attempting to set up app db")
 
 	appDB, err := openAppDB(cfg)
-	if appDB == nil {
-		if err != nil {
-			log.Printf("error returned from openAppDB: %v\n", err)
-		}
-		dirs, err := os.ReadDir(".")
-		if err != nil {
-			log.Printf("error reading dirs: %v", err)
-		}
-		for _, dir := range dirs {
-			log.Printf("found: %v", dir.Name())
-		}
-		panic(fmt.Sprintf("couldn't set up app db\ndb path: %s", cfg.DB.AppDBPath))
-	}
 	if err != nil {
 		log.Printf("error setting up app database: %v\n", err)
 		time.Sleep(20 * time.Second)
@@ -130,6 +104,21 @@ func main() {
 	if app.config.DB.BackUpEnabled {
 		// Initiated here rather than in app.serve() to run backup before any other actions
 		app.initiateDBBackupCycle()
+	}
+
+	adminExists, err := app.models.UserService.AdminExists()
+	if err != nil {
+		app.logger.Fatal(err, map[string]any{
+			"action": "check whether admin exists in db",
+		})
+	}
+
+	if !adminExists {
+		if app.config.Auth.AdminInitKey == "" {
+			app.logger.Fatal(errors.New("no admin exists, and no admin init key is set. set this in .envrc file"), nil)
+		}
+
+		log.Printf("Admin init mode enabled.\nCreate first admin at: POST /admin/init\nWith key: %s", app.config.Auth.AdminInitKey)
 	}
 
 	// app.googleAuth = &oauth2.Config{

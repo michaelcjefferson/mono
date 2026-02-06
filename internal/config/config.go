@@ -57,6 +57,7 @@ type authConfig struct {
 	JWTExpiration time.Duration `env:"JWT_EXPIRATION" envDefault:"24h"`
 	JWTRefresh    time.Duration `env:"JWT_REFRESH" envDefault:"6h"`
 	BCryptCost    int           `env:"BCRYPT_COST" envDefault:"12"`
+	AdminInitKey  string        `env:"ADMIN_INIT_KEY"`
 }
 
 type googleConfig struct {

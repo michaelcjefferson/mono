@@ -13,9 +13,7 @@ services:
     env_file:
       - .env
     volumes:
-      # - db_data:/data
       - db_data:/app/db
-    # user: "65532:65532"
     deploy:
       mode: replicated
       replicas: 1

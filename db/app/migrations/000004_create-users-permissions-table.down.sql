@@ -1,3 +1,3 @@
-DROP INDEX idx_users_permissions_permission_id;
+DROP INDEX idx_users_permissions_permission_code;
 
 DROP TABLE users_permissions;

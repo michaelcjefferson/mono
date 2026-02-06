@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 
@@ -35,15 +34,9 @@ func (app *application) resetUserToAnon(c echo.Context) {
 
 // Make dir with write permissions for the owner, and read and exec permissions for all others in group
 func (app *application) createFileDirs() error {
-	wd, _ := os.Getwd()
-	log.Println("cwd:", wd)
-
 	if err := os.MkdirAll("./db", 0755); err != nil {
 		return fmt.Errorf("failed to create application data directory: %w", err)
 	}
-	// if err := os.MkdirAll("/data/placeholder_project_name", 0755); err != nil {
-	// 	return fmt.Errorf("failed to create application data directory: %w", err)
-	// }
 
 	if app.config.Server.TLS.HTTPSOn {
 		if err := os.MkdirAll("./tls", 0755); err != nil {
