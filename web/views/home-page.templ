@@ -5,8 +5,8 @@ import (
   "placeholder_project_tag/web/components"
 )
 
-templ HomePage(u *data.User) {
-  @Authenticated(u, true) {
+templ HomePage(u *data.User, isAdmin bool) {
+  @Authenticated(u, isAdmin, true) {
     @components.Hero("placeholder_project_name")
     <h3>From the Go App Kitchen</h3>
   }

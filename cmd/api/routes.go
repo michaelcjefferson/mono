@@ -3,6 +3,7 @@ package main
 import (
 	"embed"
 	"net/http"
+	"placeholder_project_tag/internal/data"
 
 	"golang.org/x/time/rate"
 
@@ -88,6 +89,13 @@ func (app *application) routes() http.Handler {
 	authWeb.POST("/profile/username/update", app.usernameUpdateHandler)
 
 	authWeb.GET("/", app.homepagePageHandler)
+
+	// Routes requiring admin:access permission
+	adminWeb := authWeb.Group("/admin", app.requirePermissionCode(data.PermissionAdminAccess))
+	adminWeb.GET("", app.adminDashboardHandler)
+
+	// No auth required for this endpoint
+	router.POST("/admin/init", app.initialiseAdmin)
 
 	return router
 }

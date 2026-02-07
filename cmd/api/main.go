@@ -13,6 +13,7 @@ import (
 	"placeholder_project_tag/pkg/logging"
 
 	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 
 	"net/http"
 	// Provide mem/cpu leak analysis at /debug/pprof
@@ -121,13 +122,13 @@ func main() {
 		log.Printf("Admin init mode enabled.\nCreate first admin at: POST /admin/init\nWith key: %s", app.config.Auth.AdminInitKey)
 	}
 
-	// app.googleAuth = &oauth2.Config{
-	// 	ClientID:     app.config.Google.GoogleClientID,
-	// 	ClientSecret: app.config.Google.GoogleClientSecret,
-	// 	RedirectURL:  app.config.Google.GoogleRedirectURL,
-	// 	Scopes:       []string{"email", "profile"},
-	// 	Endpoint:     google.Endpoint,
-	// }
+	app.googleAuth = &oauth2.Config{
+		ClientID:     app.config.Google.GoogleClientID,
+		ClientSecret: app.config.Google.GoogleClientSecret,
+		RedirectURL:  app.config.Google.GoogleRedirectURL,
+		Scopes:       []string{"email", "profile"},
+		Endpoint:     google.Endpoint,
+	}
 
 	err = app.serve()
 	if err != nil {

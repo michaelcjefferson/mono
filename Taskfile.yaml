@@ -237,6 +237,19 @@ tasks:
       - docker --context ${REMOTE_CONTEXT} logs -f
     silent: true
 
+  init-admin:
+    desc: Send POST request to server with credentials to initialise admin account (run with `init-admin EMAIL=___ PASSWORD=___`)
+    cmds:
+      - |
+        curl -X POST ${API_HOST}:${API_PORT}/admin/init \
+        -H "Content-Type: application/json" \
+        -d "{
+          \"init_key\": \"${ADMIN_INIT_KEY}\",
+          \"email\": \"{{.EMAIL}}\",
+          \"password\": \"{{.PASSWORD}}\"
+        }"
+    silent: true
+
   check-tools:
     desc: "Check for existence of all required dev tools, attempt to install if missing"
     deps: [check-go, check-templ, check-migrate]

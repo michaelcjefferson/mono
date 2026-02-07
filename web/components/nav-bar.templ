@@ -2,7 +2,7 @@ package components
 
 import "placeholder_project_tag/internal/data"
 
-templ NavBar(u *data.User) {
+templ NavBar(u *data.User, isAdmin bool) {
   <div class="nav-container">
     if u != nil {
       <h3 class="welcome-message">Welcome, { u.UserName }</h3>
@@ -22,6 +22,11 @@ templ NavBar(u *data.User) {
         <li class="nav-item">
           <a class="nav-link" href="/settings">Settings</a>
         </li>
+        if isAdmin {
+          <li class="nav-item">
+            <a class="nav-link" href="/admin">Admin</a>
+          </li>
+        }
       </ul>
     </nav>
 

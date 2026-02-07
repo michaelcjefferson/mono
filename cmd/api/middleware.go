@@ -126,17 +126,31 @@ func (app *application) requirePermissionCode(permission data.Permission) echo.M
 		return func(c echo.Context) error {
 			user := app.contextGetUser(c)
 
-			hasP := user.HasPermission(permission)
+			// hasP := user.HasPermission(permission)
 
-			app.logger.Info("requirePermissionCode hit", map[string]any{
-				"user_id":         user.ID,
-				"required_perm":   permission,
-				"permissions":     user.Permissions,
-				"has_perm_result": hasP,
-			})
+			// app.logger.Info("requirePermissionCode hit", map[string]any{
+			// 	"user_id":         user.ID,
+			// 	"required_perm":   permission,
+			// 	"permissions":     user.Permissions,
+			// 	"has_perm_result": hasP,
+			// })
 
 			if !user.HasPermission(permission) {
-				return app.errorHTTPResponse(c, nil, apperrors.ErrCodeResourceForbidden, nil)
+				app.logger.Warn("unauthorised access attempt", map[string]any{
+					"user_id":             user.ID,
+					"email":               user.Email,
+					"path":                c.Request().URL.Path,
+					"ip":                  c.Request().RemoteAddr,
+					"required_permission": permission,
+					"has_permissions":     user.Permissions,
+				})
+
+				// Return 404 for unpermitted admin:access routes so that they are obscured from hackers
+				if permission == data.PermissionAdminAccess {
+					return echo.NewHTTPError(http.StatusNotFound)
+				} else {
+					return app.errorHTTPResponse(c, nil, apperrors.ErrCodeResourceForbidden, nil)
+				}
 			}
 
 			return next(c)

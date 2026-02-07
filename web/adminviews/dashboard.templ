@@ -1,0 +1,12 @@
+package adminviews
+
+import (
+  "placeholder_project_tag/internal/data"
+  "placeholder_project_tag/web/views"
+)
+
+templ Dashboard(u *data.User, isAdmin bool) {
+  @views.Authenticated(u, isAdmin, true) {
+    <h1>Admin Dashboard</h1>
+  }
+}

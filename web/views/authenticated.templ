@@ -5,11 +5,11 @@ import (
   "placeholder_project_tag/web/components"
 )
 
-templ Authenticated(u *data.User, showNav bool) {
+templ Authenticated(u *data.User, isAdmin, showNav bool) {
   @Base() {
     <div class="layout-container">
       if showNav {
-        @components.NavBar(u)
+        @components.NavBar(u, isAdmin)
         <div class="main-content nav-margin">
           { children... }
         </div>

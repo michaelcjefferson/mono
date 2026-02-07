@@ -23,7 +23,7 @@ const (
 // Ensure Permission string is one of the valid permissions defined by the app
 func (p Permission) IsValid() bool {
 	switch p {
-	case PermissionAdminAccess, PermissionUserAccess:
+	case PermissionAdminAccess, PermissionAdminCreate, PermissionUserAccess:
 		return true
 	default:
 		return false
@@ -118,7 +118,7 @@ func (m *PermissionsModel) GetOneForUserID(ctx context.Context, id int64, p Perm
 // TODO: build dynamic query by looping over perms and adding (?, ?) to a []string for each, then run query once
 func (m *PermissionsModel) InsertManyForUserID(tx *sql.Tx, ctx context.Context, perms []Permission, userID int64) error {
 	permQuery, err := tx.PrepareContext(ctx, `
-		INSERT INTO users_permissions (user_id, permission_id)
+		INSERT INTO users_permissions (user_id, permission_code)
 		VALUES ($1, $2)
 		ON CONFLICT DO NOTHING;`)
 	if err != nil {
