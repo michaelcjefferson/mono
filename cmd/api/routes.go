@@ -94,6 +94,10 @@ func (app *application) routes() http.Handler {
 	adminWeb := authWeb.Group("/admin", app.requirePermissionCode(data.PermissionAdminAccess))
 	adminWeb.GET("", app.adminDashboardHandler)
 
+	// adminWeb.GET("/logs/partial", app.getFilteredLogsHandler)
+	adminWeb.GET("/logs/:id", app.getIndividualLogPageHandler)
+	adminWeb.GET("/logs", app.getFilteredLogsPageHandler)
+
 	// No auth required for this endpoint
 	router.POST("/admin/init", app.initialiseAdmin)
 

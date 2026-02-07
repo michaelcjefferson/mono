@@ -1,0 +1,141 @@
+package admincomponents
+
+import (
+  "slices"
+  "sort"
+  "strconv"
+
+  "placeholder_project_tag/internal/data"
+)
+
+templ LogFilters(logsMetadata *data.LogsMetadata, filters *data.LogFilters) {
+  // Create sorted slices of filters in logsMetadata
+  {{
+    type levelMeta struct {
+      Level string
+      Count int
+    }
+    var levelMetas []levelMeta
+    for level, count := range logsMetadata.Levels {
+      levelMetas = append(levelMetas, levelMeta{Level: level, Count: count})
+    }
+    // Sort by count in descending order
+    sort.Slice(levelMetas, func(i, j int) bool {
+      return levelMetas[i].Count > levelMetas[j].Count
+    })
+
+    type userMeta struct {
+      UserID int
+      Count int
+    }
+    var userMetas []userMeta
+    for id, count := range logsMetadata.Users {
+      userMetas = append(userMetas, userMeta{UserID: id, Count: count})
+    }
+    // Sort by user ID in ascending order
+    sort.Slice(userMetas, func(i, j int) bool {
+      return userMetas[i].UserID < userMetas[j].UserID
+    })
+  }}
+
+  <div class="log-filters-container">
+    <div class="filter-controls-container">
+      <div class="level-filters filters-column">
+        for _, l := range levelMetas {
+          if slices.Contains(filters.Level, l.Level) {
+            <button class="filter-button level-filter active" data-filter={ l.Level }>{ l.Level + " (" + strconv.Itoa(l.Count) + ")" }</button>
+          } else {
+            <button class="filter-button level-filter" data-filter={ l.Level }>{ l.Level + " (" + strconv.Itoa(l.Count) + ")" }</button>
+          }
+        }
+      </div>
+      <div class="user-filters filters-column">
+        for _, u := range userMetas {
+          if slices.Contains(filters.UserID, u.UserID) {
+            <button class="filter-button user_id-filter active" data-filter={ strconv.Itoa(u.UserID) }>{ "User ID " +  strconv.Itoa(u.UserID) + " (" + strconv.Itoa(u.Count) + ")" }</button>
+          } else {
+            <button class="filter-button user_id-filter" data-filter={ strconv.Itoa(u.UserID) }>{ "User ID " +  strconv.Itoa(u.UserID) + " (" + strconv.Itoa(u.Count) + ")" }</button>
+          }
+        }
+      </div>
+    </div>
+
+    <div class="search-and-clear-container">
+      <div class="search-bar">
+        <form id="search-form">
+          <input type="text" name="message-search-bar" value={filters.Message} id="message-search-bar" placeholder="Search messages...">
+
+          <input type="submit" value="SEARCH">
+        </form>
+      </div>
+
+      <button id="clear-filters-button">CLEAR FILTERS</button>
+    </div>
+  </div>
+
+  <script>
+    function getFilteredLogs() {
+      let activeFilters = {
+        "level": [],
+        "user_id": [],
+        "message": ""
+      }
+
+      document.querySelectorAll(".filter-button.level-filter.active").forEach(button => {
+        activeFilters["level"].push(button.getAttribute("data-filter"));
+      });
+      document.querySelectorAll(".filter-button.user_id-filter.active").forEach(button => {
+        activeFilters["user_id"].push(button.getAttribute("data-filter"));
+      });
+      activeFilters["message"] = document.getElementById("message-search-bar").value;
+
+      // sessionStorage.setItem("activeFilters", JSON.stringify(activeFilters));
+
+      let params = new URLSearchParams();
+      // Adding params in this way ensures that with multiple level params, it will be "level=INFO&level=ERROR" rather than "level=INFO,ERROR" - this makes it much easier for the echo router to pick out these params
+      if (activeFilters["level"].length > 0) {
+        activeFilters["level"].forEach(p => {
+          params.append("level", p);
+        });
+      }
+      if (activeFilters["user_id"].length > 0) {
+        activeFilters["user_id"].forEach(p => {
+          params.append("user_id", p);
+        });
+      }
+      if (activeFilters["message"] !== "") {
+        params.append("message", activeFilters["message"]);
+      }
+
+      if (params.toString()) {
+        window.location.href = "/admin/logs?" + params.toString();
+      } else {
+        window.location.href = "/admin/logs";
+      }
+      // let res = await fetch("/logs?" + params.toString());
+      // if (res.ok) {
+      //   window.location.href = "/logs?" + params.toString();
+      // } else {
+      //   console.log(res);
+      // }
+      // htmx.ajax("GET", "/logs?" + params.toString(), { target: "#logs-container", pushURL: true });
+    }
+
+    document.querySelectorAll(".filter-button").forEach(button => {
+      button.addEventListener("click", () => {
+        button.classList.toggle("active");
+
+        getFilteredLogs();
+      });
+    });
+
+    document.getElementById("search-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      getFilteredLogs();
+    });
+
+    document.getElementById("clear-filters-button").addEventListener("click", () => {
+      window.location.href = "/admin/logs";
+    });
+  </script>
+}

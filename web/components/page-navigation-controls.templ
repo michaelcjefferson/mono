@@ -1,0 +1,42 @@
+package components
+
+import (
+  "fmt"
+  "strconv"
+  
+  "placeholder_project_tag/internal/data"
+)
+
+templ PageNavigationControls(location, params string, metadata *data.FilterMetadata) {
+  <div class="page-navigation-controls">
+    if metadata.CurrentPage > 1 {
+      <a href={ templ.URL(fmt.Sprintf("/"+location+"?page=%v%v", metadata.CurrentPage-1, params)) }>PREVIOUS</a>
+    }
+
+    {{
+      startPage := metadata.CurrentPage - 4
+      endPage := metadata.CurrentPage + 4
+
+      if startPage < 1 {
+        endPage -= startPage
+        startPage = 1
+      }
+
+      if endPage > metadata.LastPage {
+        endPage = metadata.LastPage
+      }
+    }}
+
+    for n := startPage; n <= endPage; n++ {
+      if n == metadata.CurrentPage {
+        <p>{ strconv.Itoa(n) }</p>
+      } else {
+        <a href={ templ.URL(fmt.Sprintf("/"+location+"?page=%v%v", n, params)) }>{ strconv.Itoa(n) }</a>
+      }
+    }
+    
+    if metadata.CurrentPage < metadata.LastPage {
+      <a href={ templ.URL(fmt.Sprintf("/"+location+"?page=%v%v", metadata.CurrentPage+1, params)) }>NEXT</a>
+    }
+  </div>
+}

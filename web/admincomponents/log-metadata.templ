@@ -1,0 +1,12 @@
+package admincomponents
+
+import (
+  "fmt"
+  
+  "placeholder_project_tag/internal/data"
+)
+
+templ LogMetadata(metadata data.LogsMetadata) {
+  <h3>Total Logs Found: { fmt.Sprintf("%v", metadata.TotalRecords) }</h3>
+  <h3>Page { fmt.Sprintf("%v", metadata.CurrentPage) }/{ fmt.Sprintf("%v", metadata.LastPage) }</h3>
+}

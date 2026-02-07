@@ -1,0 +1,28 @@
+package admincomponents
+
+import (
+	"fmt"
+	"strings"
+  "time"
+	"placeholder_project_tag/pkg/logging"
+)
+
+// TODO: get tz from request? And convert to that
+func ConvertToLocalTZ(t time.Time) time.Time {
+	tz, err := time.LoadLocation("Pacific/Auckland")
+	if err != nil {
+		return t
+	}
+	return t.In(tz)
+}
+
+templ LogCard(log *logging.Log) {
+  <a class="log-card" href={ templ.URL(fmt.Sprintf("/admin/logs/%v", log.ID)) }>
+    <p class={ strings.ToLower(log.Level) + "-text truncate-text log-message" }>{ log.Message }</p>
+    <div class="log-meta-container">
+      <p><strong>ID:</strong>{ fmt.Sprintf("%v", log.ID) }
+      <br>
+      { ConvertToLocalTZ(log.Timestamp).Format("15:04:05 02-01") }</p>
+    </div>
+  </a>
+}

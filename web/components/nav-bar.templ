@@ -4,6 +4,9 @@ import "placeholder_project_tag/internal/data"
 
 templ NavBar(u *data.User, isAdmin bool) {
   <div class="nav-container">
+    if isAdmin {
+      <h3 class="error-text">ADMIN</h3>
+    }
     if u != nil {
       <h3 class="welcome-message">Welcome, { u.UserName }</h3>
     }

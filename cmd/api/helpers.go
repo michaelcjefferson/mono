@@ -1,9 +1,11 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 
 	"placeholder_project_tag/internal/data"
 
@@ -18,6 +20,18 @@ func (app *application) Render(c echo.Context, statusCode int, t templ.Component
 	c.Response().Writer.WriteHeader(statusCode)
 	c.Response().Header().Set(echo.HeaderContentType, echo.MIMETextHTML)
 	return t.Render(c.Request().Context(), c.Response().Writer)
+}
+
+// Find "id" param from request and attempt to parse to int
+func (app *application) readIDParam(c echo.Context) (int, error) {
+	param := c.Param("id")
+
+	id, err := strconv.ParseInt(param, 10, 0)
+	if err != nil || id < 1 {
+		return 0, errors.New("invalid id parameter")
+	}
+
+	return int(id), nil
 }
 
 // Set the user for this request session to an anonymous user, and expire previously set cookies

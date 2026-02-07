@@ -149,6 +149,9 @@ func (m *LogModel) GetAll(filters LogFilters) ([]*logging.Log, *LogsMetadata, er
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
+	// log.Println("get logs query:")
+	// log.Println(queryBuilder.String())
+
 	rows, err := m.DB.QueryContext(ctx, queryBuilder.String(), args...)
 	if err != nil {
 		log.Printf("error getting logs from db: %v\n", err)

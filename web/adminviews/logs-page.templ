@@ -1,0 +1,56 @@
+package adminviews
+
+import (
+  "fmt"
+  "strings"
+
+  "placeholder_project_tag/web/admincomponents"
+  "placeholder_project_tag/web/components"
+  "placeholder_project_tag/web/views"
+  "placeholder_project_tag/internal/data"
+  "placeholder_project_tag/pkg/logging"
+)
+
+// Returns a string with the structure "param=val&param=val" for every filter present in filters.
+// TODO: Make this agnostic and globally available, so that filters are automatically determined based on keys in data.Filters
+func constructParams(filters *data.LogFilters) string {
+  vals := []string{}
+
+  if len(filters.Level) > 0 {
+    for _, val := range filters.Level {
+      vals = append(vals, fmt.Sprintf("level=%v", val))
+    }
+  }
+
+  if len(filters.UserID) > 0 {
+    for _, val := range filters.UserID {
+      vals = append(vals, fmt.Sprintf("user_id=%v", val))
+    }
+  }
+
+  if filters.Message != "" {
+    vals = append(vals, fmt.Sprintf("message=%v", filters.Message))
+  }
+
+  if len(vals) > 0 {
+    return "&"+strings.Join(vals, "&")
+  } else {
+    return ""
+  }
+}
+
+templ LogsPage(logs []*logging.Log, metadata *data.LogsMetadata, filters *data.LogFilters, u *data.User, isAdmin, showNav bool) {
+  @views.Authenticated(u, isAdmin, showNav) {
+    // <h2 class="header">Logs Page</h2>
+
+    @admincomponents.LogMetadata(*metadata)
+
+    // Pass filters to LogFilters so that styles can reflect those that are currently active
+    @admincomponents.LogFilters(metadata, filters)
+
+    @admincomponents.LogList(logs)
+
+    // Construct params based on active filters, and pass to PageNavigationControls to add to links
+    @components.PageNavigationControls("admin/logs", constructParams(filters), &metadata.FilterMetadata)
+  }
+}

@@ -1,0 +1,34 @@
+package admincomponents
+
+import (
+  "strconv"
+
+  "placeholder_project_tag/pkg/logging"
+	"fmt"
+	"strings"
+)
+
+templ LogDetail(log logging.Log) {
+  <div class="log-detail-container">
+    <div class="log-id-time-delete-container">
+      <p><strong>ID: </strong>{ strconv.Itoa(log.ID) }</p>
+      <h4>{ ConvertToLocalTZ(log.Timestamp).Format("15:04:05.0000, Jan 2 2006") }</h4>
+      <button class="fatal-text log-delete-button" data-log-id={ strconv.Itoa(log.ID) }>DELETE</button>
+    </div>
+    <h2 class={ strings.ToLower(log.Level) + "-text" }>{ log.Level }</h2>
+    <h3>{ log.Message }</h3>
+    if len(log.Details) > 0 {
+      <h3><u>Properties</u></h3>
+      for prop, val := range log.Details {
+        <p><strong>{ prop }:</strong> { fmt.Sprintf("%v", val) }</p>
+      }
+    }
+    if log.Trace != "" {
+      <h3><u>Stack Trace</u></h3>
+      <pre class="log-trace">{ log.Trace }</pre>
+    }
+    if log.UserID > 0 {
+      <p><strong>User ID:</strong> { strconv.Itoa(log.UserID) }</p>
+    }
+  </div>
+}

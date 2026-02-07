@@ -1,0 +1,15 @@
+package admincomponents
+
+import "placeholder_project_tag/pkg/logging"
+
+templ LogList(logs []*logging.Log) {
+  <div id="log-list">
+    if len(logs) > 0 {
+      for _, log := range logs {
+        @LogCard(log)
+      }
+    } else {
+      <h2>NO LOGS FOUND</h2>
+    }
+  </div>
+}

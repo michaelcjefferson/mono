@@ -1,0 +1,14 @@
+package admincomponents
+
+import (
+  "placeholder_project_tag/internal/data"
+  "placeholder_project_tag/pkg/logging"
+)
+
+templ LogsContainer(logs []*logging.Log, metadata data.LogsMetadata) {
+  <div id="logs-container">
+    @LogMetadata(metadata)
+
+    @LogList(logs)
+  </div>
+}
