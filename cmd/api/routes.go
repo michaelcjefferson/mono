@@ -97,6 +97,7 @@ func (app *application) routes() http.Handler {
 	// adminWeb.GET("/logs/partial", app.getFilteredLogsHandler)
 	adminWeb.GET("/logs/:id", app.getIndividualLogPageHandler)
 	adminWeb.GET("/logs", app.getFilteredLogsPageHandler)
+	adminWeb.DELETE("/logs/:id", app.deleteIndividualLogHandler)
 
 	adminWeb.GET("/users", app.getUsersAdminPageHandler)
 

@@ -18,9 +18,24 @@ templ LogDetail(log logging.Log) {
     <h2 class={ strings.ToLower(log.Level) + "-text" }>{ log.Level }</h2>
     <h3>{ log.Message }</h3>
     if len(log.Details) > 0 {
-      <h3><u>Properties</u></h3>
+      <h3><u>Details</u></h3>
       for prop, val := range log.Details {
-        <p><strong>{ prop }:</strong> { fmt.Sprintf("%v", val) }</p>
+        switch val.(type) {
+        case map[string]any:
+          <h4>Extra Details</h4>
+          for property, value := range val.(map[string]any) {
+            switch value.(type) {
+            case map[string]any:
+              for p, v := range value.(map[string]any) {
+                <p><strong>{ p }:</strong> { fmt.Sprintf("%v", v) }</p>
+              }
+            default:
+              <p><strong>{ property }:</strong> { fmt.Sprintf("%v", value) }</p>
+            }
+          }
+        default:
+          <p><strong>{ prop }:</strong> { fmt.Sprintf("%v", val) }</p>
+        }
       }
     }
     if log.Trace != "" {

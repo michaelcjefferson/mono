@@ -293,10 +293,7 @@ type metadataUpdates struct {
 	UserIDs map[int]int
 }
 
-func (m *LogModel) DeleteForID(id int) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
-
+func (m *LogModel) DeleteForID(ctx context.Context, id int) error {
 	tx, err := m.DB.BeginTx(ctx, nil)
 	if err != nil {
 		return err

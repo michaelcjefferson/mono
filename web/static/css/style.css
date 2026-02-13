@@ -160,6 +160,11 @@ li {
   margin-left: 300px;
 }
 
+table {
+  border-collapse: collapse;
+  width: 95%;
+}
+
 /* TEXT */
 .debug-text {
   color: var(--splash-colour);
@@ -460,11 +465,6 @@ nav a.active {
 }
 
 /* LOGS */
-.log-table {
-  border-collapse: collapse;
-  width: 100%;
-}
-
 .log-table-header {
   padding-bottom: 2px;
   text-decoration: underline var(--theme-colour-l2) 2px;
@@ -478,6 +478,16 @@ nav a.active {
 
 .log-table tr:hover {
   background-color: var(--bg-colour-l2);
+}
+
+.log-detail-container {
+  width: 100%;
+}
+
+.log-id-time-delete-container {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
 }
 
 /* FILTERS */

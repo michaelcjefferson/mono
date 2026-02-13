@@ -2,21 +2,11 @@ package adminviews
 
 import (
   "fmt"
-  "time"
 
   "placeholder_project_tag/internal/data"
   "placeholder_project_tag/web/admincomponents"
   "placeholder_project_tag/web/views"
 )
-
-// TODO: get tz from request? And convert to that
-func ConvertToLocalTZ(t time.Time) time.Time {
-	tz, err := time.LoadLocation("Pacific/Auckland")
-	if err != nil {
-		return t
-	}
-	return t.In(tz)
-}
 
 templ UsersPage(users []*data.User, u *data.User, isAdmin, showNav bool) {
   @views.Authenticated(u, isAdmin, showNav) {
@@ -25,11 +15,11 @@ templ UsersPage(users []*data.User, u *data.User, isAdmin, showNav bool) {
       @admincomponents.NavBar()
     }
 
-    <div class="card register-card">
-      <a href="/register">
-        <button id="register-button" class="info-text">Register New User</button>
-      </a>
-    </div>
+    // <div class="card register-card">
+    //   <a href="/register">
+    //     <button id="register-button" class="info-text">Register New Admin</button>
+    //   </a>
+    // </div>
 
     <table class="users-table">
       <thead>
@@ -48,15 +38,15 @@ templ UsersPage(users []*data.User, u *data.User, isAdmin, showNav bool) {
               <td>{ fmt.Sprintf("%v", user.ID) }</td>
               <td>{ user.UserName }</td>
               <td><a href="/users/update/password" class="button-link">Change Password</a></td>
-              <td>{ ConvertToLocalTZ(user.LastAuthenticatedAt).Format("15:04:05 02-01") }</td>
+              <td>{ admincomponents.ConvertToLocalTZ(user.LastAuthenticatedAt).Format("15:04:05 02-01") }</td>
               <td><button id="delete-user-button" class="fatal-text">DELETE</button></td>
             </tr>
           } else {
             <tr>
               <td>{ fmt.Sprintf("%v", user.ID) }</td>
               <td>{ user.UserName }</td>
-              <td>{ ConvertToLocalTZ(user.CreatedAt).Format("15:04:05 02-01") }</td>
-              <td>{ ConvertToLocalTZ(user.LastAuthenticatedAt).Format("15:04:05 02-01") }</td>
+              <td>{ admincomponents.ConvertToLocalTZ(user.CreatedAt).Format("15:04:05 02-01") }</td>
+              <td>{ admincomponents.ConvertToLocalTZ(user.LastAuthenticatedAt).Format("15:04:05 02-01") }</td>
               <td></td>
             </tr>
           }

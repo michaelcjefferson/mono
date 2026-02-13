@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"placeholder_project_tag/internal/data"
@@ -8,6 +9,7 @@ import (
 	"placeholder_project_tag/pkg/validator"
 	views "placeholder_project_tag/web/adminviews"
 	"strconv"
+	"time"
 
 	"github.com/labstack/echo/v4"
 )
@@ -98,4 +100,26 @@ func (app *application) getIndividualLogPageHandler(c echo.Context) error {
 	referer := c.Request().Header.Get("Referer")
 
 	return app.Render(c, http.StatusOK, views.LogDetailPage(*log, referer, u, u.HasPermission(data.PermissionAdminAccess), true))
+}
+
+func (app *application) deleteIndividualLogHandler(c echo.Context) error {
+	ctx, cancel := context.WithTimeout(c.Request().Context(), 3*time.Second)
+	defer cancel()
+
+	id, err := app.readIDParam(c)
+	if err != nil {
+		return app.errorAPIResponse(c, err, apperrors.ErrCodeResourceNotFound, nil)
+	}
+
+	err = app.models.Logs.DeleteForID(ctx, id)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			return app.errorAPIResponse(c, err, apperrors.ErrCodeResourceNotFound, nil)
+		default:
+			return app.serverErrorResponse(c, err, nil)
+		}
+	}
+
+	return app.redirectResponse(c, "/admin/logs", http.StatusAccepted, "log successfully deleted")
 }
