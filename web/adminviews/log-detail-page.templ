@@ -9,6 +9,10 @@ import (
 
 templ LogDetailPage(log logging.Log, ref string, u *data.User, isAdmin, showNav bool) {
   @views.Authenticated(u, isAdmin, showNav) {
+    if showNav {
+      @admincomponents.NavBar()
+    }
+
     @admincomponents.LogDetail(log)
 
     if ref != "" {

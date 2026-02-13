@@ -17,8 +17,9 @@
   --theme-colour-d2: #1b23b8;
   --splash-colour: #2cade9;
   --success-colour: greenyellow;
-  --error-colour: #f39c12;
-  --fatal-colour: #e74c3c;
+  --warning-colour: #f39c12;
+  --error-colour: #e74c3c;
+  --fatal-colour: #ee325ae1;
 
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -160,8 +161,16 @@ li {
 }
 
 /* TEXT */
+.debug-text {
+  color: var(--splash-colour);
+}
+
 .info-text {
   color: var(--success-colour);
+}
+
+.warning-text {
+  color: var(--warning-colour);
 }
 
 .error-text {
@@ -201,6 +210,15 @@ nav ul li {
 nav a.active {
   color: var(--theme-colour-l2);
   pointer-events: none;
+}
+
+.secondary-nav {
+  border: none;
+  display: flex;
+}
+
+.secondary-nav ul {
+  flex-direction: row;
 }
 
 /* MODAL */
@@ -373,6 +391,7 @@ nav a.active {
   opacity: 1;
 }
 
+/* TODO: incorporate app-wide colours */
 /* Toast types */
 .toast-error {
   background: #fee2e2;
@@ -425,6 +444,73 @@ nav a.active {
 .toast-leave-end {
   opacity: 0;
   transform: translateX(100%);
+}
+
+/* PAGE NAVIGATION CONTROLS */
+.page-navigation-controls {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  padding: .5rem;
+  width: 50%;
+}
+
+.page-navigation-controls p {
+  margin: 0;
+}
+
+/* LOGS */
+.log-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.log-table-header {
+  padding-bottom: 2px;
+  text-decoration: underline var(--theme-colour-l2) 2px;
+  text-underline-offset: 2px;
+}
+
+.log-table tr {
+  cursor: pointer;
+  /* transition: background-color 0.2s; */
+}
+
+.log-table tr:hover {
+  background-color: var(--bg-colour-l2);
+}
+
+/* FILTERS */
+.filters-container {
+  display: flex;
+}
+
+.filter-controls-container {
+  display: flex;
+}
+
+.filter-controls-container button {
+  font-size: .8rem;
+  margin: .2rem;
+}
+
+.filters-column {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin: 0 2.5rem;
+}
+
+.search-and-clear-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: space-around;
+}
+
+.filter-button.active {
+  background-color: var(--theme-colour-l1);
+  color: var(--font-colour-l1);
 }
 
 /* LIGHT MODE */

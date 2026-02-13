@@ -1,0 +1,35 @@
+package admincomponents
+
+import "placeholder_project_tag/pkg/logging"
+
+templ LogTable(logs []*logging.Log) {
+  <table class="log-table">
+    <thead>
+      <tr>
+        <th class="log-table-header">Level</th>
+        <th class="log-table-header">Message</th>
+        <th class="log-table-header">Timestamp</th>
+        <th class="log-table-header"></th>
+      </tr>
+    </thead>
+    <tbody>
+      if len(logs) > 0 {
+        for _, log := range logs {
+          @LogTableRow(log)
+        }
+      } else {
+        <tr>
+          <td colspan="4" class="px-4 py-6 text-center text-gray-500">
+            No logs found
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+
+  <script>
+    function viewLogDetail(url) {
+      window.location.href = url;
+    }
+  </script>
+}

@@ -25,8 +25,8 @@ tasks:
   up:
     desc: Build all app files and start development environment in Docker container
     cmds:
-      - task: build:migrations
       - task: build:templates
+      - task: build:migrations
       - echo "Starting dev docker environment..."
       - direnv exec . docker compose up --build -d
     deps: [env-setup, down]
@@ -35,8 +35,8 @@ tasks:
   up:remote:
     desc: Build and push app files to remote docker context and run them
     cmds:
-      - task: build:migrations
       - task: build:templates
+      - task: build:migrations
       - echo "Starting remote dev docker environment..."
       - direnv exec . docker --context ${REMOTE_CONTEXT} compose up --build -d
     deps: [env-setup, down:remote]
@@ -49,10 +49,10 @@ tasks:
       - direnv exec . go run -tags "fts5" ./cmd/api
     deps:
       - task: env-setup
-      - task: check-tools
+      # - task: check-tools
       # - task: remove
-      - task: build:migrations
       - task: build:templates
+      - task: build:migrations
     # silent: true
 
   down:

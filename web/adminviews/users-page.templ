@@ -1,0 +1,104 @@
+package adminviews
+
+import (
+  "fmt"
+  "time"
+
+  "placeholder_project_tag/internal/data"
+  "placeholder_project_tag/web/admincomponents"
+  "placeholder_project_tag/web/views"
+)
+
+// TODO: get tz from request? And convert to that
+func ConvertToLocalTZ(t time.Time) time.Time {
+	tz, err := time.LoadLocation("Pacific/Auckland")
+	if err != nil {
+		return t
+	}
+	return t.In(tz)
+}
+
+templ UsersPage(users []*data.User, u *data.User, isAdmin, showNav bool) {
+  @views.Authenticated(u, isAdmin, showNav) {
+    // <h2 class="header">Users Page</h2>
+    if showNav {
+      @admincomponents.NavBar()
+    }
+
+    <div class="card register-card">
+      <a href="/register">
+        <button id="register-button" class="info-text">Register New User</button>
+      </a>
+    </div>
+
+    <table class="users-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Username</th>
+          <th>Created At</th>
+          <th>Last Authenticated At</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        for _, user := range users {
+          if user.ID == u.ID {
+            <tr>
+              <td>{ fmt.Sprintf("%v", user.ID) }</td>
+              <td>{ user.UserName }</td>
+              <td><a href="/users/update/password" class="button-link">Change Password</a></td>
+              <td>{ ConvertToLocalTZ(user.LastAuthenticatedAt).Format("15:04:05 02-01") }</td>
+              <td><button id="delete-user-button" class="fatal-text">DELETE</button></td>
+            </tr>
+          } else {
+            <tr>
+              <td>{ fmt.Sprintf("%v", user.ID) }</td>
+              <td>{ user.UserName }</td>
+              <td>{ ConvertToLocalTZ(user.CreatedAt).Format("15:04:05 02-01") }</td>
+              <td>{ ConvertToLocalTZ(user.LastAuthenticatedAt).Format("15:04:05 02-01") }</td>
+              <td></td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+
+    <div id="confirm-delete-modal" class="modal hidden">
+      <div class="modal-content">
+        <p>Are you sure you want to delete your account?</p>
+        <p>Another admin will need to create a new account for you if you want to use this service again.</p>
+        <p>If this is the last existing admin account, you will need to set up the whole service again from scratch to access it.</p>
+        <button id="confirm-delete">Yes</button>
+        <button id="confirm-cancel">Cancel</button>
+      </div>
+    </div>
+
+    <script>
+      const modal = document.getElementById("confirm-delete-modal");
+
+      document.getElementById("delete-user-button").addEventListener("click", () => {
+        modal.classList.remove("hidden");
+      });
+
+      document.getElementById("confirm-cancel").addEventListener("click", () => {
+        modal.classList.add("hidden");
+      });
+
+      document.getElementById("confirm-delete").addEventListener("click", async () => {
+        try {
+          const res = await fetch("/users/delete", { method: "GET" });
+          if (res.ok) {
+            window.location.href = "/sign-in";
+          } else {
+            // TODO: Switch this for an error message following the same flow as other HTML pages that make requests
+            alert("Something went wrong.")
+          }
+        } catch (err) {
+          console.error(err);
+          alert("Network error");
+        }
+      });
+    </script>
+  }
+}

@@ -32,3 +32,41 @@ func (s *UserService) AdminExists() (bool, error) {
 
 	return exists, nil
 }
+
+func (s *UserService) GetAllUsers(ctx context.Context) ([]*User, error) {
+	query := `
+		SELECT id, created_at, last_authenticated_at, username FROM users;
+	`
+
+	rows, err := s.Users.DB.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	// Make sure result from QueryContext is closed before returning from function
+	defer rows.Close()
+
+	users := []*User{}
+
+	for rows.Next() {
+		var user User
+
+		err := rows.Scan(
+			&user.ID,
+			&user.CreatedAt,
+			&user.LastAuthenticatedAt,
+			&user.UserName,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		users = append(users, &user)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, ProcessSQLError(err, "error getting all users from db")
+	}
+
+	return users, nil
+}

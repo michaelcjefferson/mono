@@ -98,6 +98,8 @@ func (app *application) routes() http.Handler {
 	adminWeb.GET("/logs/:id", app.getIndividualLogPageHandler)
 	adminWeb.GET("/logs", app.getFilteredLogsPageHandler)
 
+	adminWeb.GET("/users", app.getUsersAdminPageHandler)
+
 	// No auth required for this endpoint
 	router.POST("/admin/init", app.initialiseAdmin)
 

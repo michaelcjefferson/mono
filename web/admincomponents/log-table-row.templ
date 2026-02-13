@@ -1,0 +1,36 @@
+package admincomponents
+
+import (
+	"fmt"
+	"strings"
+  "time"
+	"placeholder_project_tag/pkg/logging"
+)
+
+// TODO: get tz from request? And convert to that
+func ConvertToLocalTZ(t time.Time) time.Time {
+	tz, err := time.LoadLocation("Pacific/Auckland")
+	if err != nil {
+		return t
+	}
+	return t.In(tz)
+}
+
+script goToLink(link templ.SafeURL) {
+  window.location.href = link;
+}
+
+templ LogTableRow(log *logging.Log) {
+  <tr onClick={ goToLink(templ.URL(fmt.Sprintf("/admin/logs/%v", log.ID))) }>
+    <td class={ strings.ToLower(log.Level) + "-text" }>{ log.Level }</td>
+    if log.Message != "" {
+      <td>{ log.Message }</td>
+    } else {
+      <td>-</td>
+    }
+    <td>{ ConvertToLocalTZ(log.Timestamp).Format("15:04:05 02-01") }</td>
+    <td>
+      <button>✕</button>
+    </td>
+  </tr>
+}

@@ -9,6 +9,7 @@ templ LogsContainer(logs []*logging.Log, metadata data.LogsMetadata) {
   <div id="logs-container">
     @LogMetadata(metadata)
 
-    @LogList(logs)
+    // @LogList(logs)
+    @LogTable(logs)
   </div>
 }

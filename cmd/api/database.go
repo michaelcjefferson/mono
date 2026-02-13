@@ -55,7 +55,6 @@ func openAppDB(cfg *config.Config) (*sql.DB, error) {
 
 func openMonitorDB(cfg *config.Config) (*sql.DB, error) {
 	// Either connect to or create (if it doesn't exist) the database at the provided path
-	log.Printf("db connection string: %s", cfg.DB.MonitorDBPath+dbParams)
 	db, err := sql.Open("sqlite3", cfg.DB.MonitorDBPath+dbParams)
 	if err != nil {
 		log.Printf("returning with error from sql.Open monitor db: %v", err)

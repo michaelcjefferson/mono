@@ -112,3 +112,27 @@ func (app *application) adminDashboardHandler(c echo.Context) error {
 
 	return app.Render(c, http.StatusAccepted, adminviews.Dashboard(u, hasPerm))
 }
+
+func (app *application) getUsersAdminPageHandler(c echo.Context) error {
+	u := app.contextGetUser(c)
+
+	ctx, cancel := context.WithTimeout(c.Request().Context(), 3*time.Second)
+	defer cancel()
+
+	app.logger.Info("user attempted to access admin users page", map[string]any{
+		"user": u,
+	})
+
+	hasPerm := u.HasPermission(data.PermissionAdminAccess)
+
+	if !hasPerm {
+		return echo.ErrNotFound
+	}
+
+	users, err := app.models.UserService.GetAllUsers(ctx)
+	if err != nil {
+		return app.errorHTTPResponse(c, err, apperrors.ErrCodeInternalServer, nil)
+	}
+
+	return app.Render(c, http.StatusAccepted, adminviews.UsersPage(users, u, hasPerm, true))
+}
