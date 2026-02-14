@@ -40,37 +40,33 @@ templ LogFilters(logsMetadata *data.LogsMetadata, filters *data.LogFilters) {
 
   <div class="filters-container">
     <div class="filter-controls-container">
-      <div class="level-filters filters-column">
+      <div class="level-filters filters-set">
         for _, l := range levelMetas {
           if slices.Contains(filters.Level, l.Level) {
-            <button class="filter-button level-filter active" data-filter={ l.Level }>{ l.Level + " (" + strconv.Itoa(l.Count) + ")" }</button>
+            <button class="filter-button level-filter active" data-filter={ l.Level }>{ l.Level } <span class="small-text">{ "(" + strconv.Itoa(l.Count) + ")" }</span></button>
           } else {
-            <button class="filter-button level-filter" data-filter={ l.Level }>{ l.Level + " (" + strconv.Itoa(l.Count) + ")" }</button>
+            <button class="filter-button level-filter" data-filter={ l.Level }>{ l.Level } <span class="small-text">{ "(" + strconv.Itoa(l.Count) + ")" }</span></button>
           }
         }
       </div>
-      <div class="user-filters filters-column">
+      <div class="user-filters filters-set">
         for _, u := range userMetas {
           if slices.Contains(filters.UserID, u.UserID) {
-            <button class="filter-button user_id-filter active" data-filter={ strconv.Itoa(u.UserID) }>{ "User ID " +  strconv.Itoa(u.UserID) + " (" + strconv.Itoa(u.Count) + ")" }</button>
+            <button class="filter-button user_id-filter active" data-filter={ strconv.Itoa(u.UserID) }>{ "ID " +  strconv.Itoa(u.UserID) } <span class="small-text">{ "(" + strconv.Itoa(u.Count) + ")" }</span></button>
           } else {
-            <button class="filter-button user_id-filter" data-filter={ strconv.Itoa(u.UserID) }>{ "User ID " +  strconv.Itoa(u.UserID) + " (" + strconv.Itoa(u.Count) + ")" }</button>
+            <button class="filter-button user_id-filter" data-filter={ strconv.Itoa(u.UserID) }>{ "ID " +  strconv.Itoa(u.UserID) } <span class="small-text">{ "(" + strconv.Itoa(u.Count) + ")" }</span></button>
           }
         }
       </div>
     </div>
 
-    <div class="search-and-clear-container">
-      <div class="search-bar">
-        <form id="search-form">
-          <input type="text" name="message-search-bar" value={filters.Message} id="message-search-bar" placeholder="Search messages...">
+    <form class="search-bar" id="log-search-form">
+      <input type="text" name="message-search-bar" value={filters.Message} id="message-search-bar" placeholder="Search messages...">
 
-          <input type="submit" value="SEARCH">
-        </form>
-      </div>
+      <input type="submit" value="SEARCH">
+    </form>
 
-      <button id="clear-filters-button">CLEAR FILTERS</button>
-    </div>
+    <button id="clear-filters-button">CLEAR FILTERS</button>
   </div>
 
   <script>
@@ -129,7 +125,7 @@ templ LogFilters(logsMetadata *data.LogsMetadata, filters *data.LogFilters) {
       });
     });
 
-    document.getElementById("search-form").addEventListener("submit", (e) => {
+    document.getElementById("log-search-form").addEventListener("submit", (e) => {
       e.preventDefault();
       getFilteredLogs();
     });
