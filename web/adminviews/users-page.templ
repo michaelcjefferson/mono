@@ -38,15 +38,15 @@ templ UsersPage(users []*data.User, u *data.User, isAdmin, showNav bool) {
               <td>{ fmt.Sprintf("%v", user.ID) }</td>
               <td>{ user.UserName }</td>
               <td><a href="/users/update/password" class="button-link">Change Password</a></td>
-              <td>{ admincomponents.ConvertToLocalTZ(user.LastAuthenticatedAt).Format("15:04:05 02-01") }</td>
+              <td>{ admincomponents.ConvertToLocalTZ(user.LastAuthenticatedAt).Format("15:04:05, 02-01") }</td>
               <td><button id="delete-user-button" class="fatal-text">DELETE</button></td>
             </tr>
           } else {
             <tr>
               <td>{ fmt.Sprintf("%v", user.ID) }</td>
               <td>{ user.UserName }</td>
-              <td>{ admincomponents.ConvertToLocalTZ(user.CreatedAt).Format("15:04:05 02-01") }</td>
-              <td>{ admincomponents.ConvertToLocalTZ(user.LastAuthenticatedAt).Format("15:04:05 02-01") }</td>
+              <td>{ admincomponents.ConvertToLocalTZ(user.CreatedAt).Format("15:04:05, 02-01") }</td>
+              <td>{ admincomponents.ConvertToLocalTZ(user.LastAuthenticatedAt).Format("15:04:05, 02-01") }</td>
               <td></td>
             </tr>
           }

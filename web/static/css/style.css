@@ -13,6 +13,7 @@
   --theme-colour: #646cff;
   --theme-colour-l1: #797feb;
   --theme-colour-l2: #9ba0fa;
+  --theme-colour-l3: #ecedff;
   --theme-colour-d1: #3e3ee6;
   --theme-colour-d2: #1b23b8;
   --splash-colour: #2cade9;
@@ -476,12 +477,11 @@ nav a.active {
   text-underline-offset: 2px;
 }
 
-.log-table tr {
+tbody tr {
   cursor: pointer;
-  /* transition: background-color 0.2s; */
 }
 
-.log-table tr:hover {
+tbody tr:hover {
   background-color: var(--bg-colour-l2);
 }
 
@@ -510,15 +510,13 @@ nav a.active {
   gap: 2;
 }
 
-.filter-controls-container button {
+/* .filter-controls-container button {
   font-size: .8rem;
   margin: .2rem;
-}
+} */
 
 .filters-set {
   display: flex;
-  /* flex-direction: column; */
-  /* justify-content: center; */
   margin: 0 2.5rem;
 }
 
@@ -526,6 +524,8 @@ nav a.active {
   display: flex;
   justify-content: center;
   align-items: center;
+  font-size: .8rem;
+  margin: .2rem;
 }
 
 .filter-button.active {
@@ -535,8 +535,10 @@ nav a.active {
 
 /* SEARCH */
 .search-bar {
-  display: flex;
   align-items: center;
+  display: flex;
+  gap: 2;
+  margin: 0 5px;
 }
 
 /* LIGHT MODE */
@@ -548,6 +550,9 @@ nav a.active {
 
     color: var(--bg-colour-l2);
     background-color: var(--font-colour-l1);
+  }
+  .small-text {
+    color: var(--neutral-colour);
   }
   button, .button-link {
     border: 1px solid var(--bg-colour);
@@ -580,6 +585,14 @@ nav a.active {
 
   .mobile-menu-toggle span {
     background: var(--bg-colour);
+  }
+
+  .form-field input {
+    border: 1px solid var(--theme-colour-l2);
+  }
+
+  tbody tr:hover {
+    background-color: var(--theme-colour-l3);
   }
 }
 
