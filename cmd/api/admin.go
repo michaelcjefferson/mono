@@ -129,10 +129,21 @@ func (app *application) getUsersAdminPageHandler(c echo.Context) error {
 		return echo.ErrNotFound
 	}
 
-	users, err := app.models.UserService.GetAllUsers(ctx)
+	filters := data.UserFilters{
+		Filters: data.Filters{
+			Page:     1,
+			PageSize: 10,
+		},
+	}
+
+	users, meta, err := app.models.AdminService.GetAllUsers(ctx, filters)
 	if err != nil {
 		return app.errorHTTPResponse(c, err, apperrors.ErrCodeInternalServer, nil)
 	}
+
+	app.logger.Info("got all users for admin page", map[string]any{
+		"meta": meta,
+	})
 
 	return app.Render(c, http.StatusAccepted, adminviews.UsersPage(users, u, hasPerm, true))
 }

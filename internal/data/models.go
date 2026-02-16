@@ -12,13 +12,15 @@ var (
 )
 
 type Models struct {
-	Logs        LogModel
-	UserService *UserService
+	AdminService *AdminService
+	Logs         LogModel
+	UserService  *UserService
 }
 
 func NewModels(appDB, monitorDB *sql.DB) Models {
 	return Models{
-		Logs:        LogModel{DB: monitorDB},
-		UserService: NewUserService(appDB),
+		AdminService: NewAdminService(appDB, monitorDB),
+		Logs:         LogModel{DB: monitorDB},
+		UserService:  NewUserService(appDB),
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 )
 
 var (
@@ -16,17 +17,43 @@ var (
 )
 
 type UserService struct {
-	Permissions PermissionsModel
-	Tokens      TokenModel
-	Users       UserModel
+	Permissions *PermissionsModel
+	Tokens      *TokenModel
+	Users       *UserModel
 }
 
 func NewUserService(db *sql.DB) *UserService {
 	return &UserService{
-		Permissions: PermissionsModel{DB: db},
-		Tokens:      TokenModel{DB: db},
-		Users:       UserModel{DB: db},
+		Permissions: &PermissionsModel{DB: db},
+		Tokens:      &TokenModel{DB: db},
+		Users:       &UserModel{DB: db},
 	}
+}
+
+func (s *UserService) AdminExists() (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+
+	query := `
+		SELECT EXISTS (
+			SELECT 1 
+			FROM users_permissions
+			WHERE permission_code = 'admin:access'
+	);`
+
+	var exists bool
+
+	err := s.Permissions.DB.QueryRowContext(ctx, query).Scan(&exists)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return false, nil
+		default:
+			return false, ProcessSQLError(err, "try to find out whether admin user exists in db")
+		}
+	}
+
+	return exists, nil
 }
 
 func (s *UserService) CreateUser(ctx context.Context, user *User) error {

@@ -61,8 +61,12 @@ func (app *application) routes() http.Handler {
 
 	router.StaticFS("/js/*", jsFS)
 
-	router.GET("/error", app.errorCheckHandler)
-	router.GET("/healthcheck", app.healthcheckHandler)
+	// Expose some basic and unprotected testing endpoints if app is not in production env
+	if !app.config.IsProduction() {
+		router.GET("/error", app.errorCheckHandler)
+		router.GET("/healthcheck", app.healthcheckHandler)
+	}
+
 	// Prevent error when browser attempts to access some common files that don't exist yet. To be populated with files such as security.txt and dns-challenge (for Let's Encrypt)
 	router.GET("/.well-known/*", echo.NotFoundHandler)
 

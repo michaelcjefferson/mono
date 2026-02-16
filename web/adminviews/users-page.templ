@@ -26,6 +26,7 @@ templ UsersPage(users []*data.User, u *data.User, isAdmin, showNav bool) {
         <tr>
           <th>ID</th>
           <th>Username</th>
+          <th>Permissions</th>
           <th>Created At</th>
           <th>Last Authenticated At</th>
           <th></th>
@@ -37,6 +38,11 @@ templ UsersPage(users []*data.User, u *data.User, isAdmin, showNav bool) {
             <tr>
               <td>{ fmt.Sprintf("%v", user.ID) }</td>
               <td>{ user.UserName }</td>
+              <td>
+                for _, p := range user.Permissions {
+                  <p>{ string(p) }</p>
+                }
+              </td>
               <td><a href="/users/update/password" class="button-link">Change Password</a></td>
               <td>{ admincomponents.ConvertToLocalTZ(user.LastAuthenticatedAt).Format("15:04:05, 02-01") }</td>
               <td><button id="delete-user-button" class="fatal-text">DELETE</button></td>
@@ -45,6 +51,11 @@ templ UsersPage(users []*data.User, u *data.User, isAdmin, showNav bool) {
             <tr>
               <td>{ fmt.Sprintf("%v", user.ID) }</td>
               <td>{ user.UserName }</td>
+              <td>
+                for _, p := range user.Permissions {
+                  <p>{ string(p) }</p>
+                }
+              </td>
               <td>{ admincomponents.ConvertToLocalTZ(user.CreatedAt).Format("15:04:05, 02-01") }</td>
               <td>{ admincomponents.ConvertToLocalTZ(user.LastAuthenticatedAt).Format("15:04:05, 02-01") }</td>
               <td></td>
