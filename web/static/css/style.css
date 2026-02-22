@@ -56,6 +56,8 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  /* Prevents layout changes when scrollbar is/isn't present */
+  scrollbar-gutter: stable;
 }
 
 h1 {
@@ -147,14 +149,25 @@ li {
   text-align: right;
 }
 
-.main-content {
+/* .main-content {
   overflow-y: auto;
   text-align: center;
   width: 100%;
   display: flex;
+  min-height: 100vh;
   flex-direction: column;
   justify-content: center;
   align-items: center;
+} */
+
+.main-content {
+  display: grid;
+  min-height: 100vh;
+  grid-template-rows: auto 1fr;
+  place-items: center;
+  overflow-y: auto;
+  text-align: center;
+  width: 100%;
 }
 
 .nav-margin {
@@ -223,9 +236,22 @@ nav a.active {
   pointer-events: none;
 }
 
-.secondary-nav {
+/* Hide nav icons by default, so that only text is displayed */
+.nav-container .icon {
+  display: none;
+}
+
+/* .secondary-nav {
+  margin-bottom: auto;
   border: none;
+  border-bottom: 1px solid var(--theme-colour-l3);
   display: flex;
+} */
+
+.secondary-nav {
+  align-self: center;
+  border: none;
+  border-bottom: 1px solid var(--theme-colour-l3);
 }
 
 .secondary-nav ul {
@@ -607,6 +633,32 @@ tbody tr:hover {
     width: 100%;
     height: auto;
     align-items: center;
+  }
+
+  .nav-container ul {
+    margin: 0 auto;
+  }
+
+  nav ul li {
+    list-style: none;
+    padding: 1em .6em .3em .6em;
+  }
+
+  .nav-container .icon {
+    border: 1px solid var(--neutral-colour);
+    border-radius: 25px;
+    display: inline-block;
+    height: 48px;
+    padding: .4rem;
+    width: 48px;
+    color: var(--font-colour-l1);
+  }
+
+  .nav-container .label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
   }
 
   .main-content {

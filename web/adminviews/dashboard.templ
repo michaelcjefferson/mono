@@ -8,7 +8,7 @@ import (
 
 templ Dashboard(u *data.User, isAdmin bool) {
   @views.Authenticated(u, isAdmin, true) {
-    <h1>Admin Dashboard</h1>
     @admincomponents.NavBar()
+    <h1>Admin Dashboard</h1>
   }
 }

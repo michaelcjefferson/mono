@@ -63,8 +63,7 @@ func (s *AdminService) GetAllUsers(ctx context.Context, filters UserFilters) ([]
 
 		// Check to see if query returned a string of permissions, then split it by "," and convert each to Permission type before attaching to User
 		if permString.Valid {
-			permSlice := strings.Split(permString.String, ",")
-			for _, p := range permSlice {
+			for p := range strings.SplitSeq(permString.String, ",") {
 				perm := Permission(p)
 				if perm.IsValid() {
 					user.Permissions = append(user.Permissions, perm)

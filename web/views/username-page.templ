@@ -8,7 +8,7 @@ templ UsernamePage(u *data.User) {
   @Base() {
     <div x-data="usernameChangeForm()">
       if u.UserName != "" {
-        <p>Old Username: <span class="error-text">{ u.UserName }</span></p>
+        <p>Old Username: <span class="debug-text">{ u.UserName }</span></p>
       }
 
       <form @submit.prevent="handleSubmit" id="username-form" class="user-form">
