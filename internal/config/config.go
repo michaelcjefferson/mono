@@ -74,6 +74,7 @@ type loggingConfig struct {
 
 type dBConfig struct {
 	BackUpEnabled bool   `env:"BACKUP_ENABLED" envDefault:"false"`
+	DBBackupDir   string `env:"DB_BACKUP_DIR"`
 	AppDBPath     string `env:"APP_DB_PATH"`
 	MonitorDBPath string `env:"MONITOR_DB_PATH"`
 }

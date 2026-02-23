@@ -6,12 +6,12 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"time"
 )
 
-func RunBackup(dbPath string) (string, error) {
+func RunBackup(dbPath, backupDir string) (string, error) {
 	src := dbPath
-	backupDir := "./db/backups"
 
 	if err := os.MkdirAll(backupDir, 0755); err != nil {
 		log.Printf("failed to create backup dir: %v", err)
@@ -48,4 +48,51 @@ func copyFile(src, dst string) error {
 	}
 
 	return d.Sync()
+}
+
+func PruneBackups(backupDir string, keep int) (int, error) {
+	entries, err := os.ReadDir(backupDir)
+	if err != nil {
+		return 0, err
+	}
+
+	type fileInfo struct {
+		path string
+		mod  time.Time
+	}
+
+	var files []fileInfo
+
+	for _, e := range entries {
+		if e.IsDir() {
+			continue
+		}
+
+		info, err := e.Info()
+		if err != nil {
+			continue
+		}
+
+		files = append(files, fileInfo{
+			path: filepath.Join(backupDir, e.Name()),
+			mod:  info.ModTime(),
+		})
+	}
+
+	// Newest first
+	sort.Slice(files, func(i, j int) bool {
+		return files[i].mod.After(files[j].mod)
+	})
+
+	total := 0
+
+	// Delete everything after the first `keep`
+	for i := keep; i < len(files); i++ {
+		if err := os.Remove(files[i].path); err != nil {
+			log.Printf("failed to remove backup %s: %v", files[i].path, err)
+		}
+		total++
+	}
+
+	return total, nil
 }

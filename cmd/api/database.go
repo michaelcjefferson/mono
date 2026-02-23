@@ -115,10 +115,10 @@ func runMigrations(db *sql.DB, dbType string) error {
 }
 
 // TODO: add backup of monitor.db
-// Create copy of app.db in db/backups on startup and once every 6 hours
+// Create copy of app.db in db/backups on startup and once every 24 hours
 func (app *application) initiateDBBackupCycle() {
 	app.background(func() {
-		dst, err := dbbackup.RunBackup(app.config.DB.AppDBPath)
+		dst, err := dbbackup.RunBackup(app.config.DB.AppDBPath, app.config.DB.DBBackupDir)
 		if err != nil {
 			app.logger.Error(err, map[string]any{
 				"action": "backup db on startup",
@@ -135,15 +135,23 @@ func (app *application) initiateDBBackupCycle() {
 		for {
 			select {
 			case <-ticker.C:
-				dst, err := dbbackup.RunBackup(app.config.DB.AppDBPath)
+				dst, err := dbbackup.RunBackup(app.config.DB.AppDBPath, app.config.DB.DBBackupDir)
 				if err != nil {
 					app.logger.Error(err, map[string]any{
 						"action": "backup db in background process",
 					})
 				} else {
-					app.logger.Info("db backed up", map[string]any{
+					app.logger.Info("app db backed up", map[string]any{
 						"backup_path": dst,
 					})
+					total, err := dbbackup.PruneBackups(app.config.DB.DBBackupDir, 7)
+					if err != nil {
+						app.logger.Error(err, map[string]any{
+							"action": "prune db backups",
+						})
+					} else {
+						app.logger.Info(fmt.Sprintf("pruned %d db backups from file system", total), nil)
+					}
 				}
 			case <-app.isShuttingDown:
 				app.logger.Info("db backup cycle ending - shut down signal received", nil)
@@ -160,7 +168,7 @@ func (app *application) backupDBHandler(c echo.Context) error {
 		"user_id": u.ID,
 	})
 
-	dst, err := dbbackup.RunBackup(app.config.DB.AppDBPath)
+	dst, err := dbbackup.RunBackup(app.config.DB.AppDBPath, app.config.DB.DBBackupDir)
 	if err != nil {
 		app.logger.Error(err, map[string]any{
 			"action": "backup db from user request",

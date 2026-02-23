@@ -61,9 +61,11 @@ templ LogFilters(logsMetadata *data.LogsMetadata, filters *data.LogFilters) {
     </div>
 
     <form class="search-bar" id="log-search-form">
-      <input type="text" name="message-search-bar" value={filters.Message} id="message-search-bar" placeholder="Search messages...">
+      <input type="text" name="message-search-bar" value={filters.Message} id="message-search-bar" placeholder="Search logs...">
 
-      <input type="submit" value="SEARCH">
+      <button type="submit" class="search-button">
+        Search
+      </button>
     </form>
 
     <button class="filter-button" id="clear-filters-button">CLEAR FILTERS</button>

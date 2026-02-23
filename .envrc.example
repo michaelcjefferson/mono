@@ -43,6 +43,7 @@ export LOG_TO_DB=true
 
 # Database
 export BACKUP_ENABLED=false
+export DB_BACKUP_DIR=./db
 export APP_DB_PATH=./db/app.db
 export MONITOR_DB_PATH=./db/monitor.db
 
