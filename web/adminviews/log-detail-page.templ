@@ -47,7 +47,10 @@ templ LogDetailPage(log logging.Log, ref string, u *data.User, isAdmin, showNav 
         });
       });
 
-      document.getElementById("confirm-cancel").addEventListener("click", () => {
+      document.getElementById("confirm-cancel").addEventListener("click", (e) => {
+        console.log("delete clicked");
+        e.preventDefault();
+        e.stopPropagation();
         modal.classList.add("hidden");
         logIDToDelete = null;
       });
@@ -65,14 +68,17 @@ templ LogDetailPage(log logging.Log, ref string, u *data.User, isAdmin, showNav 
           }
 
           if (res.ok) {
-            console.log(`Log ID ${logIDToDelete} successfully deleted`);
+            // console.log(`Log ID ${logIDToDelete} successfully deleted`);
+            // Success
+            Alpine.store('toast').success(`Log ID ${logIDToDelete} successfully deleted`);
           } else {
             // TODO: Switch this for an error message following the same flow as other HTML pages that make requests
-            alert("Something went wrong.")
+            console.error(err);
+            Alpine.store('toast').error(`Error deleting Log ID ${logIDToDelete}.`);
           }
         } catch (err) {
           console.error(err);
-          alert("Network error");
+          Alpine.store('toast').error(`Error deleting Log ID ${logIDToDelete}.`);
         }
       });
     </script>

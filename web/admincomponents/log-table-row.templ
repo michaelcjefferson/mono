@@ -2,6 +2,7 @@ package admincomponents
 
 import (
 	"fmt"
+  "strconv"
 	"strings"
 	"placeholder_project_tag/pkg/logging"
 )
@@ -20,7 +21,7 @@ templ LogTableRow(log *logging.Log) {
     }
     <td>{ ConvertToLocalTZ(log.Timestamp).Format("15:04:05 02-01") }</td>
     <td>
-      <button>✕</button>
+      <button class="log-delete-button" aria-label="Delete" data-log-id={ strconv.Itoa(log.ID) }>✕</button>
     </td>
   </tr>
 }

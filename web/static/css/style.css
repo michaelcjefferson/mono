@@ -664,8 +664,8 @@ tbody tr:hover {
 
 .search-bar input[type="text"] {
   flex: 1;
-  padding: 6px 10px;
-  border-radius: 10px;
+  padding: 0.6em 1.2em;
+  border-radius: 8px;
   border: 1px solid #dcdcdc;
   background: #fff;
   color: var(--bg-colour-d2);
@@ -684,12 +684,13 @@ tbody tr:hover {
 }
 
 .search-button {
-  padding: 6px 10px;
-  border-radius: 5px;
+  /* padding: 6px 10px; */
+  padding: 0.6em 1.2em;
+  /* border-radius: 8px; */
   border: none;
-  background: #1a73e8;
+  background: var(--bg-colour-l2);
   color: white;
-  font-weight: 600;
+  /* font-weight: 600; */
   cursor: pointer;
   transition: background 0.15s ease, transform 0.05s ease;
 }

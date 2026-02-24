@@ -58,5 +58,64 @@ templ LogsPage(logs []*logging.Log, metadata *data.LogsMetadata, filters *data.L
       // Construct params based on active filters, and pass to PageNavigationControls to add to links
       @components.PageNavigationControls("admin/logs", constructParams(filters), &metadata.FilterMetadata)
     </div>
+
+    <div id="confirm-delete-modal" class="modal hidden">
+      <div class="modal-content">
+        <p>Are you sure you want to delete this log?</p>
+        <div class="modal-button-container">
+          <button id="confirm-delete">Yes</button>
+          <button id="confirm-cancel">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let logIDToDelete;
+
+      const modal = document.getElementById("confirm-delete-modal");
+
+      const logElements = document.querySelectorAll(".log-delete-button");
+
+      logElements.forEach(deleteButton => {
+        deleteButton.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          logIDToDelete = deleteButton.dataset.logId;
+          modal.classList.remove("hidden");
+        });
+      });
+
+      document.getElementById("confirm-cancel").addEventListener("click", () => {
+        modal.classList.add("hidden");
+        logIDToDelete = null;
+      });
+
+      document.getElementById("confirm-delete").addEventListener("click", async () => {
+        try {
+          const res = await fetch("/admin/logs/" + logIDToDelete, { method: "DELETE" });
+
+          if (res.redirected) {
+            // Get the redirect URL from the Location header
+            let redirectUrl = res.url;
+            // Redirect the user manually
+            window.location.href = redirectUrl;
+            return;
+          }
+
+          if (res.ok) {
+            // console.log(`Log ID ${logIDToDelete} successfully deleted`);
+            // Success
+            Alpine.store('toast').success(`Log ID ${logIDToDelete} successfully deleted`);
+          } else {
+            // TODO: Switch this for an error message following the same flow as other HTML pages that make requests
+            console.error(err);
+            Alpine.store('toast').error(`Error deleting Log ID ${logIDToDelete}.`);
+          }
+        } catch (err) {
+          console.error(err);
+          Alpine.store('toast').error(`Error deleting Log ID ${logIDToDelete}.`);
+        }
+      });
+    </script>
   }
 }
