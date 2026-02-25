@@ -18,6 +18,7 @@ var (
 
 type UserService struct {
 	Permissions *PermissionsModel
+	Sessions    *SessionModel
 	Tokens      *TokenModel
 	Users       *UserModel
 }
@@ -25,6 +26,7 @@ type UserService struct {
 func NewUserService(db *sql.DB) *UserService {
 	return &UserService{
 		Permissions: &PermissionsModel{DB: db},
+		Sessions:    &SessionModel{DB: db},
 		Tokens:      &TokenModel{DB: db},
 		Users:       &UserModel{DB: db},
 	}

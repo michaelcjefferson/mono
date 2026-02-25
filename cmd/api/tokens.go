@@ -47,12 +47,19 @@ func (app *application) initiateTokenDeletionCycle() {
 		for {
 			select {
 			case <-ticker.C:
-				deleted, err := app.models.UserService.Tokens.DeleteExpiredTokens()
+				tokensDeleted, err := app.models.UserService.Tokens.DeleteExpiredTokens()
 				if err != nil {
 					app.logger.Error(err, nil)
 				}
 				app.logger.Info("purged expired tokens", map[string]any{
-					"tokensDeleted": deleted,
+					"tokensDeleted": tokensDeleted,
+				})
+				sessionsDeleted, err := app.models.UserService.Sessions.DeleteExpiredSessions()
+				if err != nil {
+					app.logger.Error(err, nil)
+				}
+				app.logger.Info("purged expired sessions", map[string]any{
+					"sessionsDeleted": sessionsDeleted,
 				})
 			case <-app.isShuttingDown:
 				app.logger.Info("token deletion cycle ending - shut down signal received", nil)

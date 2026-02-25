@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"database/sql"
 	"encoding/base32"
+	"errors"
 	"time"
 
 	"placeholder_project_tag/pkg/validator"
@@ -15,12 +16,19 @@ import (
 const (
 	TypeAdminAuth = "admin_auth_token"
 	TypeUserAuth  = "user_auth_token"
+	TypeSession   = "session_token"
 )
 
 // Token scopes
 const (
 	ScopeActivation     = "activation"
 	ScopeAuthentication = "authentication"
+)
+
+// Token errors
+var (
+	ErrInvalidToken = errors.New("invalid token")
+	ErrTokenExpired = errors.New("token expired")
 )
 
 // JSON tags dictate which fields will be encoded into JSON for the client, and the names  of their corresponding keys ("token" is more meaningful for the client than "plaintext")

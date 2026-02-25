@@ -13,8 +13,9 @@ import (
 type contextKey string
 
 const (
-	requestIDKey   contextKey = "request_id"
-	userContextKey contextKey = "user"
+	requestIDKey      contextKey = "request_id"
+	sessionContextKey contextKey = "session"
+	userContextKey    contextKey = "user"
 )
 
 func (app *application) contextSetRequestID(c echo.Context) {
@@ -53,4 +54,20 @@ func (app *application) contextGetUser(c echo.Context) *data.User {
 	}
 
 	return user
+}
+
+// Add session to request context
+func (app *application) contextSetSession(c echo.Context, s *data.Session) {
+	c.Set(string(sessionContextKey), s)
+}
+
+// Get session data for request
+func (app *application) contextGetSession(c echo.Context) *data.Session {
+	session, ok := c.Get(string(sessionContextKey)).(*data.Session)
+
+	if !ok {
+		panic("could not get session from context")
+	}
+
+	return session
 }

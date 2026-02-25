@@ -25,6 +25,7 @@ func (app *application) routes() http.Handler {
 
 	router.Use(app.recoverPanicMiddleware)
 	router.Use(app.requestIDMiddleware())
+	router.Use(app.requestContextMiddleware)
 
 	csrfMiddleware := middleware.CSRFWithConfig(middleware.CSRFConfig{
 		TokenLookup:    "header:X-CSRF-Token",

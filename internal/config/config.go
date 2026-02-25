@@ -53,11 +53,12 @@ type tlsConfig struct {
 }
 
 type authConfig struct {
-	JWTSecret     string        `env:"JWT_SECRET" required:"true"`
-	JWTExpiration time.Duration `env:"JWT_EXPIRATION" envDefault:"24h"`
-	JWTRefresh    time.Duration `env:"JWT_REFRESH" envDefault:"6h"`
-	BCryptCost    int           `env:"BCRYPT_COST" envDefault:"12"`
-	AdminInitKey  string        `env:"ADMIN_INIT_KEY"`
+	JWTSecret         string        `env:"JWT_SECRET" required:"true"`
+	JWTExpiration     time.Duration `env:"JWT_EXPIRATION" envDefault:"15m"`
+	JWTRefresh        time.Duration `env:"JWT_REFRESH" envDefault:"5m"`
+	BCryptCost        int           `env:"BCRYPT_COST" envDefault:"12"`
+	SessionExpiration time.Duration `env:"SESSION_EXPIRATION" envDefault:"30d"`
+	AdminInitKey      string        `env:"ADMIN_INIT_KEY"`
 }
 
 type googleConfig struct {

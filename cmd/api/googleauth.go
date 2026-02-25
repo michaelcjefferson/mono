@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"time"
 
 	"placeholder_project_tag/internal/data"
 	"placeholder_project_tag/pkg/apperrors"
@@ -35,22 +34,24 @@ func (app *application) googleLoginRedirectHandler(c echo.Context) error {
 
 // After user has authenticated with Google, use the returned code to obtain the user's Google profile, check db to see if user exists, and either register or sign in
 func (app *application) googleCallbackHandler(c echo.Context) error {
-	ctx, cancel := context.WithTimeout(c.Request().Context(), 7*time.Second)
-	defer cancel()
+	// TODO: test whether default 3 second context timeout is sufficient - if not, use this one with longer timeout
+	// ctx, cancel := context.WithTimeout(c.Request().Context(), 7*time.Second)
+	// c.SetRequest(c.Request().WithContext(ctx))
+	// defer cancel()
 
 	// Convert code from Google's response to token that can be used to access user's Google data in corresponding request
 	code := c.QueryParam("code")
-	googleToken, err := app.googleAuth.Exchange(ctx, code)
+	googleToken, err := app.googleAuth.Exchange(c.Request().Context(), code)
 	if err != nil {
 		return app.errorHTTPResponse(c, err, apperrors.ErrCodeFailedValidation, nil)
 	}
 
-	user, err := app.getGoogleUserInfoWithAccessToken(c, ctx, googleToken)
+	user, err := app.getGoogleUserInfoWithAccessToken(c, c.Request().Context(), googleToken)
 	if err != nil {
 		return app.serverErrorResponse(c, err, nil)
 	}
 
-	dbUser, err := app.googleUserLogInOrRegister(c, ctx, user)
+	dbUser, err := app.googleUserLogInOrRegister(c, c.Request().Context(), user)
 
 	err = app.createAndSetAuthTokenCookie(c, dbUser.ID)
 	if err != nil {
@@ -69,8 +70,8 @@ func (app *application) googleCallbackHandler(c echo.Context) error {
 }
 
 func (app *application) googleMobileAuthHandler(c echo.Context) error {
-	ctx, cancel := context.WithTimeout(c.Request().Context(), 7*time.Second)
-	defer cancel()
+	// ctx, cancel := context.WithTimeout(c.Request().Context(), 7*time.Second)
+	// defer cancel()
 
 	var req struct {
 		AccessToken string `json:"access_token"`
@@ -84,15 +85,15 @@ func (app *application) googleMobileAuthHandler(c echo.Context) error {
 		AccessToken: req.AccessToken,
 	}
 
-	user, err := app.getGoogleUserInfoWithAccessToken(c, ctx, googleToken)
+	user, err := app.getGoogleUserInfoWithAccessToken(c, c.Request().Context(), googleToken)
 	if err != nil {
 		return app.serverErrorResponse(c, err, nil)
 	}
 
 	// Check if user exists or create new user
-	dbUser, err := app.googleUserLogInOrRegister(c, ctx, user)
+	dbUser, err := app.googleUserLogInOrRegister(c, c.Request().Context(), user)
 
-	authToken, err := app.createAuthToken(ctx, dbUser.ID)
+	authToken, err := app.createAuthToken(c.Request().Context(), dbUser.ID)
 	if err != nil {
 		return app.serverErrorResponse(c, err, map[string]any{
 			"action":      "create and set auth token cookie",

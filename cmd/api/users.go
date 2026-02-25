@@ -1,10 +1,8 @@
 package main
 
 import (
-	"context"
 	"errors"
 	"net/http"
-	"time"
 
 	"github.com/labstack/echo/v4"
 
@@ -44,9 +42,6 @@ func (app *application) registerUserHandler(c echo.Context) error {
 		return app.errorAPIResponse(c, nil, apperrors.ErrCodeSignOutRequired, nil)
 	}
 
-	ctx, cancel := context.WithTimeout(c.Request().Context(), 3*time.Second)
-	defer cancel()
-
 	input := userInput{}
 
 	err := c.Bind(&input)
@@ -76,7 +71,7 @@ func (app *application) registerUserHandler(c echo.Context) error {
 		return app.errorAPIResponse(c, nil, apperrors.ErrCodeFailedValidation, v.Errors)
 	}
 
-	err = app.models.UserService.CreateUser(ctx, user)
+	err = app.models.UserService.CreateUser(c.Request().Context(), user)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrUsernameAlreadyExists):
@@ -97,6 +92,14 @@ func (app *application) registerUserHandler(c echo.Context) error {
 	if err != nil {
 		return app.serverErrorResponse(c, err, map[string]any{
 			"action": "create and set auth token cookie",
+			"user":   user,
+		})
+	}
+
+	err = app.createAndSetSessionCookie(c, &user.ID)
+	if err != nil {
+		return app.serverErrorResponse(c, err, map[string]any{
+			"action": "create and set session cookie",
 			"user":   user,
 		})
 	}
@@ -126,8 +129,6 @@ func (app *application) signInPageHandler(c echo.Context) error {
 
 func (app *application) signInHandler(c echo.Context) error {
 	u := app.contextGetUser(c)
-	ctx, cancel := context.WithTimeout(c.Request().Context(), 3*time.Second)
-	defer cancel()
 
 	if !u.IsAnonymous() {
 		return app.errorAPIResponse(c, nil, apperrors.ErrCodeSignOutRequired, nil)
@@ -150,7 +151,7 @@ func (app *application) signInHandler(c echo.Context) error {
 	}
 
 	// Retrieve row from users table that matches the provided username
-	user, err := app.models.UserService.Users.GetByUsernameOrEmail(ctx, input.UsernameOrEmail)
+	user, err := app.models.UserService.Users.GetByUsernameOrEmail(c.Request().Context(), input.UsernameOrEmail)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
@@ -184,6 +185,14 @@ func (app *application) signInHandler(c echo.Context) error {
 		})
 	}
 
+	err = app.createAndSetSessionCookie(c, &user.ID)
+	if err != nil {
+		return app.serverErrorResponse(c, err, map[string]any{
+			"action": "create and set session cookie",
+			"user":   user,
+		})
+	}
+
 	app.logger.Info("user logged in", map[string]any{
 		"user_id":  user.ID,
 		"method":   "app-based",
@@ -213,6 +222,20 @@ func (app *application) logoutUserHandler(c echo.Context) error {
 		}
 	}
 
+	sessionCookie, _ := c.Cookie(data.TypeSession)
+	err = app.models.UserService.Sessions.Delete(c.Request().Context(), sessionCookie.Value)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			return app.errorAPIResponse(c, err, apperrors.ErrCodeResourceNotFound, nil)
+		default:
+			return app.serverErrorResponse(c, err, map[string]any{
+				"action": "delete all sessions for user",
+				"user":   user,
+			})
+		}
+	}
+
 	app.logger.Info("user logged out", map[string]any{
 		"user_id":        user.ID,
 		"tokens_deleted": deleted,
@@ -224,18 +247,12 @@ func (app *application) logoutUserHandler(c echo.Context) error {
 }
 
 func (app *application) usernamePageHandler(c echo.Context) error {
-	// ctx, cancel := context.WithTimeout(c.Request().Context(), 3*time.Second)
-	// defer cancel()
-
 	user := app.contextGetUser(c)
 
 	return app.Render(c, http.StatusAccepted, views.UsernamePage(user))
 }
 
 func (app *application) usernameUpdateHandler(c echo.Context) error {
-	ctx, cancel := context.WithTimeout(c.Request().Context(), 3*time.Second)
-	defer cancel()
-
 	user := app.contextGetUser(c)
 
 	if user.IsAnonymous() {
@@ -263,7 +280,7 @@ func (app *application) usernameUpdateHandler(c echo.Context) error {
 		"new_username": userInput.UserName,
 	})
 
-	err = app.models.UserService.Users.UpdateUsername(ctx, user, userInput.UserName)
+	err = app.models.UserService.Users.UpdateUsername(c.Request().Context(), user, userInput.UserName)
 	if err != nil {
 		return app.errorAPIResponse(c, err, apperrors.ErrCodeUsernameAlreadyExists, nil)
 	}

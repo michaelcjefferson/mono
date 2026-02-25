@@ -58,7 +58,7 @@ func (m *LogModel) Insert(log *logging.Log) error {
 		args = append(args, userID)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 
 	_, err = m.DB.ExecContext(ctx, query, args...)
@@ -70,7 +70,7 @@ func (m *LogModel) Insert(log *logging.Log) error {
 	return err
 }
 
-func (m *LogModel) GetForID(id int) (*logging.Log, error) {
+func (m *LogModel) GetForID(ctx context.Context, id int) (*logging.Log, error) {
 	// Seeing as all logs that exist in the database will have a positive integer as their id, check that the request id is valid before querying database to prevent wasted queries
 	// IMPORTANT: Though it may seem like a good idea to use an unsigned int here (seeing as id will never be negative), it is more important that the types we use in our code align with the types available in our database. SQLite doesn't have unsigned ints, so use a standard int which is a reflection of SQLite's integer type
 	if id < 1 {
@@ -89,12 +89,6 @@ func (m *LogModel) GetForID(id int) (*logging.Log, error) {
 	var detailsJSON string
 	// Declare string to hold time value from database, which will be converted into time.Time
 	// var timeStr string
-
-	// Create an empty context (Background()) with a 3 second timeout. The timeout countdown will begin as soon as it is created
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-
-	// IMPORTANT: defer the cancel() function returned by context.WithTimeout(), so that in case of a successful request, the context is cancelled and resources are freed up before the request returns
-	defer cancel()
 
 	err := m.DB.QueryRowContext(ctx, query, id).Scan(
 		&log.ID,
@@ -124,7 +118,7 @@ func (m *LogModel) GetForID(id int) (*logging.Log, error) {
 }
 
 // Get all logs that match the provided filters, and return them along with metadata i.e. count of each type of log
-func (m *LogModel) GetAll(filters LogFilters) ([]*logging.Log, *LogsMetadata, error) {
+func (m *LogModel) GetAll(ctx context.Context, filters LogFilters) ([]*logging.Log, *LogsMetadata, error) {
 	// It's not possible to interpolate ORDER BY column or direction into an SQL query using $ values, so use Sprintf to create the query.
 	// Subquery SELECT COUNT(*) FROM logs_fts provides the total number of rows returned by the query, and appends it to each row in the location specified (in this case, it is the last column of each row, i.e. after trace)
 	// The JOIN also uses the logs_fts table to perform a search for messages that contain the provided searchTerm
@@ -145,9 +139,6 @@ func (m *LogModel) GetAll(filters LogFilters) ([]*logging.Log, *LogsMetadata, er
 
 	queryBuilder.WriteString(fmt.Sprintf(" ORDER BY %s %s, id DESC LIMIT ? OFFSET ?", filters.sortColumn(), filters.sortDirection()))
 	args = append(args, filters.limit(), filters.offset())
-
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
 
 	// log.Println("get logs query:")
 	// log.Println(queryBuilder.String())
@@ -277,7 +268,7 @@ func GetLogsMetadata(m *LogModel) (*LogsMetadata, error) {
 		case logType == "user_id" && userID != nil:
 			logsMetadata.Users[*userID] = count
 		default:
-			return &LogsMetadata{}, errors.New(fmt.Sprintf("error adding logtype %v to database", logType))
+			return &LogsMetadata{}, fmt.Errorf("error adding logtype %v to database", logType)
 		}
 	}
 
@@ -357,10 +348,7 @@ type LogDeletionParams struct {
 
 // Pointer to time.Time to allow for easy nil value checking
 // TODO: Allow deletion by level and userID too
-func (m *LogModel) DeleteAllInTimeRange(params LogDeletionParams) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
+func (m *LogModel) DeleteAllInTimeRange(ctx context.Context, params LogDeletionParams) error {
 	tx, err := m.DB.BeginTx(ctx, nil)
 	if err != nil {
 		return err

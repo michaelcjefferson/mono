@@ -1,1 +1,2 @@
+DROP TABLE IF EXISTS logs_fts;
 DROP TABLE logs;

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"errors"
 	"net/http"
 	"placeholder_project_tag/internal/data"
@@ -9,7 +8,6 @@ import (
 	"placeholder_project_tag/pkg/validator"
 	views "placeholder_project_tag/web/adminviews"
 	"strconv"
-	"time"
 
 	"github.com/labstack/echo/v4"
 )
@@ -69,7 +67,7 @@ func (app *application) getFilteredLogsPageHandler(c echo.Context) error {
 		return app.errorHTTPResponse(c, errors.New("filters malformed"), apperrors.ErrCodeFailedValidation, v.Errors)
 	}
 
-	logs, metadata, err := app.models.Logs.GetAll(filters)
+	logs, metadata, err := app.models.Logs.GetAll(c.Request().Context(), filters)
 	if err != nil {
 		return app.serverErrorResponse(c, err, nil)
 	}
@@ -86,7 +84,7 @@ func (app *application) getIndividualLogPageHandler(c echo.Context) error {
 		return err
 	}
 
-	log, err := app.models.Logs.GetForID(id)
+	log, err := app.models.Logs.GetForID(c.Request().Context(), id)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
@@ -103,15 +101,12 @@ func (app *application) getIndividualLogPageHandler(c echo.Context) error {
 }
 
 func (app *application) deleteIndividualLogHandler(c echo.Context) error {
-	ctx, cancel := context.WithTimeout(c.Request().Context(), 3*time.Second)
-	defer cancel()
-
 	id, err := app.readIDParam(c)
 	if err != nil {
 		return app.errorAPIResponse(c, err, apperrors.ErrCodeResourceNotFound, nil)
 	}
 
-	err = app.models.Logs.DeleteForID(ctx, id)
+	err = app.models.Logs.DeleteForID(c.Request().Context(), id)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):

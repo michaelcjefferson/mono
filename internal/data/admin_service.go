@@ -8,12 +8,14 @@ import (
 
 type AdminService struct {
 	Permissions *PermissionsModel
+	Sessions    *SessionModel
 	Users       *UserModel
 }
 
 func NewAdminService(appDB, monitorDB *sql.DB) *AdminService {
 	return &AdminService{
 		Permissions: &PermissionsModel{DB: appDB},
+		Sessions:    &SessionModel{DB: appDB},
 		Users:       &UserModel{DB: appDB},
 	}
 }

@@ -25,9 +25,11 @@ export DOMAIN_MAIN=localhost
 
 # Auth
 export JWT_SECRET=secret
-export JWT_EXPIRATION=24h
-export JWT_REFRESH=6h
+export JWT_EXPIRATION=15m
+export JWT_REFRESH=5m
 export BCRYPT_COST=12
+# 30 days
+export SESSION_EXPIRATION=720h
 export ADMIN_INIT_KEY=change-this-each-time-app-is-generated
 
 # Google

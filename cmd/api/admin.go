@@ -1,14 +1,12 @@
 package main
 
 import (
-	"context"
 	"errors"
 	"net/http"
 	"placeholder_project_tag/internal/data"
 	"placeholder_project_tag/pkg/apperrors"
 	"placeholder_project_tag/pkg/validator"
 	"placeholder_project_tag/web/adminviews"
-	"time"
 
 	"github.com/labstack/echo/v4"
 )
@@ -23,9 +21,6 @@ func (app *application) initialiseAdmin(c echo.Context) error {
 	if adminExists {
 		return echo.ErrNotFound
 	}
-
-	ctx, cancel := context.WithTimeout(c.Request().Context(), 3*time.Second)
-	defer cancel()
 
 	var input struct {
 		InitKey  string `json:"init_key"`
@@ -61,7 +56,7 @@ func (app *application) initialiseAdmin(c echo.Context) error {
 		return app.errorAPIResponse(c, nil, apperrors.ErrCodeFailedValidation, v.Errors)
 	}
 
-	err = app.models.UserService.CreateUser(ctx, user)
+	err = app.models.UserService.CreateUser(c.Request().Context(), user)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrUsernameAlreadyExists):
@@ -116,9 +111,6 @@ func (app *application) adminDashboardHandler(c echo.Context) error {
 func (app *application) getUsersAdminPageHandler(c echo.Context) error {
 	u := app.contextGetUser(c)
 
-	ctx, cancel := context.WithTimeout(c.Request().Context(), 3*time.Second)
-	defer cancel()
-
 	app.logger.Info("user attempted to access admin users page", map[string]any{
 		"user": u,
 	})
@@ -136,7 +128,7 @@ func (app *application) getUsersAdminPageHandler(c echo.Context) error {
 		},
 	}
 
-	users, meta, err := app.models.AdminService.GetAllUsers(ctx, filters)
+	users, meta, err := app.models.AdminService.GetAllUsers(c.Request().Context(), filters)
 	if err != nil {
 		return app.errorHTTPResponse(c, err, apperrors.ErrCodeInternalServer, nil)
 	}
