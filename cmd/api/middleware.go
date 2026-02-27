@@ -35,137 +35,7 @@ func (app *application) requestContextMiddleware(next echo.HandlerFunc) echo.Han
 	}
 }
 
-// TODO: incorporate below
-// func (h *Handler) AuthMiddleware(next http.Handler) http.Handler {
-//     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-//         // 1. try the existing auth token first (your current logic)
-//         authToken := extractAuthToken(r)
-//         if authToken != "" {
-//             claims, err := validateAuthToken(authToken)
-//             if err == nil {
-//                 // still valid — attach to context and continue as normal
-//                 ctx := attachClaimsToContext(r.Context(), claims)
-//                 next.ServeHTTP(w, r.WithContext(ctx))
-//                 return
-//             }
-//             // token is invalid or expired — fall through to session check
-//         }
-
-//         // 2. auth token missing or expired — check session
-//         cookie, err := r.Cookie("session")
-//         if err != nil {
-//             http.Error(w, "unauthorised", http.StatusUnauthorized)
-//             return
-//         }
-
-//         session, err := h.sessionStore.Get(cookie.Value)
-//         if err != nil || session == nil || time.Now().After(session.ExpiresAt) {
-//             http.Error(w, "unauthorised", http.StatusUnauthorized)
-//             return
-//         }
-
-//         // 3. valid session — load user, issue a fresh auth token
-//         user, err := h.userStore.GetByID(session.UserID)
-//         if err != nil {
-//             http.Error(w, "internal error", http.StatusInternalServerError)
-//             return
-//         }
-
-//         freshToken, err := issueAuthToken(user) // your existing token generation
-//         if err != nil {
-//             http.Error(w, "internal error", http.StatusInternalServerError)
-//             return
-//         }
-
-//         // return the new auth token to the client however you currently do it
-//         // e.g. in a header so the client can store and reuse it
-//         w.Header().Set("X-Refresh-Token", freshToken)
-
-//         // update last seen
-//         h.sessionStore.UpdateLastSeen(session.ID)
-
-//         // attach claims to context as normal
-//         claims, _ := validateAuthToken(freshToken)
-//         ctx := attachClaimsToContext(r.Context(), claims)
-//         next.ServeHTTP(w, r.WithContext(ctx))
-//     })
-// }
-
-// If a valid auth token is provided, set "user" value in request context to a struct containing the corresponding user's data. If an invalid token is provided, send an error.
-// func (app *application) authenticateUser(next echo.HandlerFunc) echo.HandlerFunc {
-// 	return func(c echo.Context) error {
-
-// 		// Get the http-only cookie containing the token from the request, and convert to a string
-// 		authCookie, err := c.Cookie(data.TypeUserAuth)
-
-// 		// If the cookie can't be found, check for session token, and if present and valid, set new auth token. If that also doesn't exist, the user is not authenticated and should be set as an anonymous user
-// 		if errors.Is(err, http.ErrNoCookie) {
-// 			sessCookie, err := c.Cookie(data.TypeSession)
-// 			if errors.Is(err, http.ErrNoCookie) {
-// 				app.contextSetUser(c, data.AnonymousUser)
-// 				return next(c)
-// 			}
-
-// 			session, err := app.models.UserService.Sessions.Get(c.Request().Context(), sessCookie.Value)
-// 			if err != nil || session == nil || time.Now().After(session.Expiry) {
-// 				app.contextSetUser(c, data.AnonymousUser)
-// 				return next(c)
-// 			}
-// 		}
-
-// 		authToken := authCookie.Value
-
-// 		v := validator.New()
-
-// 		if data.ValidateTokenPlaintext(v, authToken); !v.Valid() {
-// 			return app.errorHTTPResponse(c, nil, apperrors.ErrCodeInvalidToken, nil)
-// 		}
-
-// 		// Retrieve user data from user table based on the token provided.
-// 		user, tokenExpiry, err := app.models.UserService.GetUserByToken(c.Request().Context(), data.ScopeAuthentication, authToken)
-// 		if err != nil {
-// 			switch {
-// 			case errors.Is(err, data.ErrRecordNotFound):
-// 				app.resetUserToAnon(c)
-// 				e := apperrors.NewAppError(apperrors.ErrCodeTokenExpired, nil, nil, app.contextGetRequestID(c))
-// 				return app.redirectErrorResponse(c, "/sign-in", e)
-// 			default:
-// 				return app.serverErrorResponse(c, err, map[string]any{
-// 					"action": "get user by token",
-// 					"scope":  data.ScopeAuthentication,
-// 				})
-// 			}
-// 		}
-
-// 		// If token has only a short time before expiry, create a new token for that user
-// 		expiryTime, err := time.Parse(time.RFC3339, tokenExpiry)
-// 		if err != nil {
-// 			return app.serverErrorResponse(c, err, map[string]any{
-// 				"action":       "parse expiry time of token",
-// 				"token expiry": tokenExpiry,
-// 			})
-// 		}
-
-// 		expiryTimeFrame := time.Now().Add(app.config.Auth.JWTRefresh)
-
-// 		// Check if the token expiry is within the timeframe, and if so, generate a new token and return it
-// 		if expiryTime.Before(expiryTimeFrame) {
-// 			app.logger.Info("token near expiry - creating new token and sending to user", map[string]any{
-// 				"user id":           user.ID,
-// 				"expiry time":       tokenExpiry,
-// 				"expiry time frame": expiryTimeFrame,
-// 			})
-// 			app.createAndSetAuthTokenCookie(c, user.ID)
-// 		}
-
-// 		// Attach user data to context
-// 		app.contextSetUser(c, user)
-
-// 		// Call next handler in the chain.
-// 		return next(c)
-// 	}
-// }
-
+// Get or create new session for user, then attempt to authenticate (attach permissions and user data) or set to anonymous user if not auth token found
 func (app *application) authenticateUser(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		// Ensure all users (including anonymous) have a session associated with them
@@ -215,10 +85,14 @@ func (app *application) getOrCreateSession(c echo.Context) (*data.Session, error
 		// session invalid/expired - create new one
 	}
 
-	session, err := app.models.UserService.Sessions.New(c.Request().Context(), nil, c.RealIP(), app.config.Auth.SessionExpiration)
+	session, err := app.createAndSetSessionCookie(c, nil)
 	if err != nil {
 		return nil, err
 	}
+	// session, err := app.models.UserService.Sessions.New(c.Request().Context(), nil, c.RealIP(), app.config.Auth.SessionExpiration)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	return session, nil
 }
@@ -268,6 +142,9 @@ func (app *application) resolveUser(c echo.Context, session *data.Session) (*dat
 				return data.AnonymousUser, err
 			}
 			session.UserID = &user.ID
+
+			app.setSessionCookie(c, session)
+
 			// If there is a mismatch between session user id and user id, create a new session and replace old one
 		} else if *session.UserID != user.ID {
 			app.logger.Warn("mismatch between session user id and user id", map[string]any{
@@ -275,7 +152,11 @@ func (app *application) resolveUser(c echo.Context, session *data.Session) (*dat
 				"user":    user,
 			})
 
-			newSession, err := app.models.UserService.Sessions.New(c.Request().Context(), &user.ID, c.RealIP(), app.config.Auth.SessionExpiration)
+			// newSession, err := app.models.UserService.Sessions.New(c.Request().Context(), &user.ID, c.RealIP(), app.config.Auth.SessionExpiration)
+			// if err != nil {
+			// 	return data.AnonymousUser, err
+			// }
+			newSession, err := app.createAndSetSessionCookie(c, &user.ID)
 			if err != nil {
 				return data.AnonymousUser, err
 			}
@@ -290,6 +171,10 @@ func (app *application) resolveUser(c echo.Context, session *data.Session) (*dat
 		// Attempt to get user from session user id
 		user, err := app.getUserFromSession(ctx, session)
 		if err == nil {
+			// app.logger.Info("authenticated user via session cookie", map[string]any{
+			// 	"user":    user,
+			// 	"session": session,
+			// })
 			err = app.createAndSetAuthTokenCookie(c, user.ID)
 			if err != nil {
 				app.logger.Error(err, map[string]any{

@@ -125,3 +125,26 @@ func (s *UserService) GetUserByToken(ctx context.Context, tokenScope, tokenPlain
 
 	return user, expiry, nil
 }
+
+func (s *UserService) GetUserBySession(ctx context.Context, session *Session) (*User, error) {
+	user, err := s.Users.GetByID(ctx, *session.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	perms, err := s.Permissions.GetAllForUserID(ctx, user.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	user.Permissions = perms
+
+	// update last seen
+	err = s.Sessions.UpdateLastSeen(ctx, session.ID)
+	if err != nil {
+		// TODO: non-fatal, log and continue
+		return nil, err
+	}
+
+	return user, nil
+}

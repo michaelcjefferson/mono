@@ -96,7 +96,7 @@ func (app *application) registerUserHandler(c echo.Context) error {
 		})
 	}
 
-	err = app.createAndSetSessionCookie(c, &user.ID)
+	_, err = app.createAndSetSessionCookie(c, &user.ID)
 	if err != nil {
 		return app.serverErrorResponse(c, err, map[string]any{
 			"action": "create and set session cookie",
@@ -185,7 +185,7 @@ func (app *application) signInHandler(c echo.Context) error {
 		})
 	}
 
-	err = app.createAndSetSessionCookie(c, &user.ID)
+	_, err = app.createAndSetSessionCookie(c, &user.ID)
 	if err != nil {
 		return app.serverErrorResponse(c, err, map[string]any{
 			"action": "create and set session cookie",
