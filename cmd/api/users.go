@@ -96,11 +96,31 @@ func (app *application) registerUserHandler(c echo.Context) error {
 		})
 	}
 
-	_, err = app.createAndSetSessionCookie(c, &user.ID)
+	// _, err = app.createAndSetSessionCookie(c, &user.ID)
+	// if err != nil {
+	// 	return app.serverErrorResponse(c, err, map[string]any{
+	// 		"action": "create and set session cookie",
+	// 		"user":   user,
+	// 	})
+	// }
+
+	session, err := app.getOrCreateSession(c)
 	if err != nil {
 		return app.serverErrorResponse(c, err, map[string]any{
-			"action": "create and set session cookie",
-			"user":   user,
+			"action":  "get or create and set session cookie",
+			"session": session,
+			"user":    user,
+		})
+	}
+
+	session.UserID = &user.ID
+	app.setSessionCookie(c, session)
+	err = app.models.UserService.Sessions.AttachUser(c.Request().Context(), session.ID, user.ID)
+	if err != nil {
+		return app.serverErrorResponse(c, err, map[string]any{
+			"action":  "attach user to session",
+			"session": session,
+			"user":    user,
 		})
 	}
 
@@ -185,11 +205,29 @@ func (app *application) signInHandler(c echo.Context) error {
 		})
 	}
 
-	_, err = app.createAndSetSessionCookie(c, &user.ID)
+	// _, err = app.createAndSetSessionCookie(c, &user.ID)
+	// if err != nil {
+	// 	return app.serverErrorResponse(c, err, map[string]any{
+	// 		"action": "create and set session cookie",
+	// 		"user":   user,
+	// 	})
+	// }
+	session, err := app.getOrCreateSession(c)
 	if err != nil {
 		return app.serverErrorResponse(c, err, map[string]any{
-			"action": "create and set session cookie",
+			"action": "get or create and set session cookie",
 			"user":   user,
+		})
+	}
+
+	session.UserID = &user.ID
+	app.setSessionCookie(c, session)
+	err = app.models.UserService.Sessions.AttachUser(c.Request().Context(), session.ID, user.ID)
+	if err != nil {
+		return app.serverErrorResponse(c, err, map[string]any{
+			"action":  "attach user to session",
+			"session": session,
+			"user":    user,
 		})
 	}
 

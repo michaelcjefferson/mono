@@ -89,10 +89,6 @@ func (app *application) getOrCreateSession(c echo.Context) (*data.Session, error
 	if err != nil {
 		return nil, err
 	}
-	// session, err := app.models.UserService.Sessions.New(c.Request().Context(), nil, c.RealIP(), app.config.Auth.SessionExpiration)
-	// if err != nil {
-	// 	return nil, err
-	// }
 
 	return session, nil
 }
