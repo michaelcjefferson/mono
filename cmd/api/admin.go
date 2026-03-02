@@ -126,8 +126,8 @@ func (app *application) getUsersAdminPageHandler(c echo.Context) error {
 		Filters: data.Filters{
 			Page:         1,
 			PageSize:     10,
-			Sort:         "-u.last_authenticated_at",
-			SortSafeList: []string{"u.id", "u.last_authenticated_at", "u.created_at", "u.username", "-u.id", "-u.last_authenticated_at", "-u.created_at", "-u.username"},
+			Sort:         "-last_authenticated_at",
+			SortSafeList: []string{"id", "last_authenticated_at", "created_at", "username", "-id", "-last_authenticated_at", "-created_at", "-username"},
 		},
 		UserName: "",
 		UserID:   []int{},

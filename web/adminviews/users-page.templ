@@ -25,6 +25,14 @@ templ UsersPage(users []*data.User, u *data.User, metadata *data.FilterMetadata,
     <div class="content-fill">
       @admincomponents.PageMetadata(*metadata, "Users")
 
+      <form class="search-bar" id="username-search-form">
+        <input type="text" name="username-search-bar" value={filters.UserName} id="username-search-bar" placeholder="Search usernames...">
+
+        <button type="submit" class="search-button">
+          Search
+        </button>
+      </form>
+
       <table class="users-table">
         <thead>
           <tr>
@@ -86,6 +94,11 @@ templ UsersPage(users []*data.User, u *data.User, metadata *data.FilterMetadata,
     <script>
       const modal = document.getElementById("confirm-delete-modal");
 
+      document.getElementById("username-search-form").addEventListener("submit", (e) => {
+        e.preventDefault();
+        getFilteredUsers();
+      });
+
       document.getElementById("delete-user-button").addEventListener("click", () => {
         modal.classList.remove("hidden");
       });
@@ -108,6 +121,22 @@ templ UsersPage(users []*data.User, u *data.User, metadata *data.FilterMetadata,
           alert("Network error");
         }
       });
+
+      function getFilteredUsers() {
+        usernameFilter = document.getElementById("username-search-bar").value;
+
+        let params = new URLSearchParams();
+
+        if (usernameFilter !== "") {
+          params.append("username", usernameFilter);
+        }
+
+        if (params.toString()) {
+          window.location.href = "/admin/users?" + params.toString();
+        } else {
+          window.location.href = "/admin/users";
+        }
+      }
     </script>
   }
 }

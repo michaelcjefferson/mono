@@ -37,36 +37,91 @@ func (s *AdminService) GetAllUsers(ctx context.Context, filters UserFilters) ([]
 	// 	ORDER BY u.created_at DESC
 	// ;`
 
-	var queryBuilder strings.Builder
+	// var queryBuilder strings.Builder
+	// args := []any{}
+	var query string
 	args := []any{}
 
-	// queryBuilder.WriteString(`
-	// 	SELECT logs.id, logs.level, logs.timestamp, logs.message, logs.details, logs.user_id,
-	// 		(SELECT COUNT(*) FROM logs JOIN logs_fts ON logs.id = logs_fts.rowid WHERE 1=1
-	// `)
-	queryBuilder.WriteString(`
-		SELECT
-			u.id,
-			u.created_at,
-			u.last_authenticated_at,
-			u.username,
-			COALESCE(GROUP_CONCAT(up.permission_code), '') AS permissions,
-			(SELECT COUNT(*) FROM users u2 JOIN user_usernames_fts fts2 ON u2.id = fts2.rowid WHERE 1=1
-	`)
+	if filters.UserName != "" {
 
-	getAllUsersFilterQueryHelper(&queryBuilder, &args, filters)
+		filterSQL, filterArgs := buildUserFilters(filters, true)
 
-	queryBuilder.WriteString(") AS total_count FROM users u JOIN user_usernames_fts fts ON u.id = fts.rowid")
+		query = fmt.Sprintf(`
+	WITH filtered_users AS (
+		SELECT u.id
+		FROM user_usernames_fts
+		JOIN users u ON u.id = user_usernames_fts.rowid
+		WHERE 1=1 %s
+	),
+	paged_users AS (
+		SELECT u.*
+		FROM users u
+		JOIN filtered_users fu ON fu.id = u.id
+		ORDER BY %s %s, u.id DESC
+		LIMIT ? OFFSET ?
+	)
+	SELECT
+		pu.id,
+		pu.created_at,
+		pu.last_authenticated_at,
+		pu.username,
+		COALESCE(GROUP_CONCAT(up.permission_code), '') AS permissions,
+		(SELECT COUNT(*) FROM filtered_users) AS total_count
+	FROM paged_users pu
+	LEFT JOIN users_permissions up ON up.user_id = pu.id
+	GROUP BY pu.id
+	ORDER BY %s %s, pu.id DESC
+	`,
+			filterSQL,
+			filters.sortColumn(),
+			filters.sortDirection(),
+			filters.sortColumn(),
+			filters.sortDirection(),
+		)
 
-	getAllUsersFilterQueryHelper(&queryBuilder, &args, filters)
+		args = append(filterArgs, filters.limit(), filters.offset())
+	} else {
+		filterSQL, filterArgs := buildUserFilters(filters, false)
 
-	queryBuilder.WriteString(fmt.Sprintf(" LEFT JOIN users_permissions up ON up.user_id = u.id WHERE 1=1 GROUP BY u.id ORDER BY %s %s, u.id DESC LIMIT ? OFFSET ?", filters.sortColumn(), filters.sortDirection()))
-	args = append(args, filters.limit(), filters.offset())
+		query = fmt.Sprintf(`
+			WITH filtered_users AS (
+				SELECT u.id
+				FROM users u
+				WHERE 1=1 %s
+			),
+			paged_users AS (
+				SELECT u.*
+				FROM users u
+				JOIN filtered_users fu ON fu.id = u.id
+				ORDER BY %s %s, u.id DESC
+				LIMIT ? OFFSET ?
+			)
+			SELECT
+				pu.id,
+				pu.created_at,
+				pu.last_authenticated_at,
+				pu.username,
+				COALESCE(GROUP_CONCAT(up.permission_code), '') AS permissions,
+				(SELECT COUNT(*) FROM filtered_users) AS total_count
+			FROM paged_users pu
+			LEFT JOIN users_permissions up ON up.user_id = pu.id
+			GROUP BY pu.id
+			ORDER BY %s %s, pu.id DESC
+			`,
+			filterSQL,
+			filters.sortColumn(),
+			filters.sortDirection(),
+			filters.sortColumn(),
+			filters.sortDirection(),
+		)
+
+		args = append(filterArgs, filters.limit(), filters.offset())
+	}
 
 	// log.Println("running GetAllUsers query")
 	// log.Println(queryBuilder.String())
 
-	rows, err := s.Users.DB.QueryContext(ctx, queryBuilder.String(), args...)
+	rows, err := s.Users.DB.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, nil, ProcessSQLError(err, "error getting all users with filters")
 	}
@@ -129,4 +184,37 @@ func getAllUsersFilterQueryHelper(q *strings.Builder, args *[]any, filters UserF
 			*args = append(*args, val)
 		}
 	}
+}
+
+func buildUserFilters(filters UserFilters, includeFTS bool) (string, []any) {
+	var parts []string
+	var args []any
+
+	if includeFTS && filters.UserName != "" {
+		parts = append(parts, "user_usernames_fts MATCH ?")
+		// The addition of "*" will find any username that starts with the provided search, rather than looking for exact matches
+		args = append(args, filters.UserName+"*")
+	}
+
+	// To match for any username containing the search string (not just starting with it), use the following:
+	// OR u.username LIKE ?
+	// ftsQuery := filters.UserName + "*"
+	// likeQuery := "%" + filters.UserName + "%"
+
+	// args = append(args, ftsQuery, likeQuery)
+
+	if len(filters.UserID) > 0 {
+		parts = append(parts,
+			fmt.Sprintf("u.id IN (%s)", Placeholders(len(filters.UserID))),
+		)
+		for _, v := range filters.UserID {
+			args = append(args, v)
+		}
+	}
+
+	if len(parts) == 0 {
+		return "", args
+	}
+
+	return " AND " + strings.Join(parts, " AND "), args
 }
