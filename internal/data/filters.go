@@ -50,7 +50,7 @@ func NewLogsMetadata() LogsMetadata {
 type UserFilters struct {
 	Filters
 	Email    string
-	UserIDs  []int64
+	UserID   []int
 	UserName string
 }
 

@@ -7,6 +7,7 @@ import (
 	"placeholder_project_tag/pkg/apperrors"
 	"placeholder_project_tag/pkg/validator"
 	"placeholder_project_tag/web/adminviews"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
 )
@@ -123,9 +124,52 @@ func (app *application) getUsersAdminPageHandler(c echo.Context) error {
 
 	filters := data.UserFilters{
 		Filters: data.Filters{
-			Page:     1,
-			PageSize: 10,
+			Page:         1,
+			PageSize:     10,
+			Sort:         "-u.last_authenticated_at",
+			SortSafeList: []string{"u.id", "u.last_authenticated_at", "u.created_at", "u.username", "-u.id", "-u.last_authenticated_at", "-u.created_at", "-u.username"},
 		},
+		UserName: "",
+		UserID:   []int{},
+	}
+
+	filters.UserName = c.QueryParam("username")
+	if uids := c.QueryParams()["user_id"]; len(uids) != 0 {
+		for _, val := range uids {
+			u, err := strconv.Atoi(val)
+			if err != nil {
+				return app.errorHTTPResponse(c, err, apperrors.ErrCodeBadRequest, map[string]any{
+					"message": "malformed user id filters",
+				})
+			}
+			filters.UserID = append(filters.UserID, u)
+		}
+	}
+
+	// TODO: Refer to movies.go in greenlight to allow client-based sorting etc.
+	if p := c.QueryParam("page"); p != "" {
+		p, err := strconv.Atoi(p)
+		if err != nil {
+			return app.errorHTTPResponse(c, err, apperrors.ErrCodeBadRequest, map[string]any{
+				"message": "malformed page number",
+			})
+		}
+		filters.Page = p
+	}
+
+	if ps := c.QueryParam("page_size"); ps != "" {
+		ps, err := strconv.Atoi(ps)
+		if err != nil {
+			return app.errorHTTPResponse(c, err, apperrors.ErrCodeBadRequest, map[string]any{
+				"message": "malformed page size",
+			})
+		}
+		filters.PageSize = ps
+	}
+
+	v := validator.New()
+	if data.ValidateFilters(v, filters.Filters); !v.Valid() {
+		return app.errorHTTPResponse(c, errors.New("filters malformed"), apperrors.ErrCodeFailedValidation, v.Errors)
 	}
 
 	users, meta, err := app.models.AdminService.GetAllUsers(c.Request().Context(), filters)
@@ -137,5 +181,5 @@ func (app *application) getUsersAdminPageHandler(c echo.Context) error {
 		"meta": meta,
 	})
 
-	return app.Render(c, http.StatusAccepted, adminviews.UsersPage(users, u, hasPerm, true))
+	return app.Render(c, http.StatusAccepted, adminviews.UsersPage(users, u, meta, &filters, hasPerm, true))
 }

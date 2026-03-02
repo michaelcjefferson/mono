@@ -5,10 +5,11 @@ import (
 
   "placeholder_project_tag/internal/data"
   "placeholder_project_tag/web/admincomponents"
+  "placeholder_project_tag/web/components"
   "placeholder_project_tag/web/views"
 )
 
-templ UsersPage(users []*data.User, u *data.User, isAdmin, showNav bool) {
+templ UsersPage(users []*data.User, u *data.User, metadata *data.FilterMetadata, filters *data.UserFilters, isAdmin, showNav bool) {
   @views.Authenticated(u, isAdmin, showNav) {
     // <h2 class="header">Users Page</h2>
     if showNav {
@@ -21,49 +22,56 @@ templ UsersPage(users []*data.User, u *data.User, isAdmin, showNav bool) {
     //   </a>
     // </div>
 
-    <table class="users-table">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Username</th>
-          <th>Permissions</th>
-          <th>Created At</th>
-          <th>Last Authenticated At</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        for _, user := range users {
-          if user.ID == u.ID {
-            <tr>
-              <td>{ fmt.Sprintf("%v", user.ID) }</td>
-              <td>{ user.UserName }</td>
-              <td>
-                for _, p := range user.Permissions {
-                  <p>{ string(p) }</p>
-                }
-              </td>
-              <td><a href="/users/update/password" class="button-link">Change Password</a></td>
-              <td>{ admincomponents.ConvertToLocalTZ(user.LastAuthenticatedAt).Format("15:04:05, 02-01") }</td>
-              <td><button id="delete-user-button" class="fatal-text">DELETE</button></td>
-            </tr>
-          } else {
-            <tr>
-              <td>{ fmt.Sprintf("%v", user.ID) }</td>
-              <td>{ user.UserName }</td>
-              <td>
-                for _, p := range user.Permissions {
-                  <p>{ string(p) }</p>
-                }
-              </td>
-              <td>{ admincomponents.ConvertToLocalTZ(user.CreatedAt).Format("15:04:05, 02-01") }</td>
-              <td>{ admincomponents.ConvertToLocalTZ(user.LastAuthenticatedAt).Format("15:04:05, 02-01") }</td>
-              <td></td>
-            </tr>
+    <div class="content-fill">
+      @admincomponents.PageMetadata(*metadata)
+
+      <table class="users-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Username</th>
+            <th>Permissions</th>
+            <th>Created At</th>
+            <th>Last Authenticated At</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          for _, user := range users {
+            if user.ID == u.ID {
+              <tr>
+                <td>{ fmt.Sprintf("%v", user.ID) }</td>
+                <td>{ user.UserName }</td>
+                <td>
+                  for _, p := range user.Permissions {
+                    <p>{ string(p) }</p>
+                  }
+                </td>
+                <td><a href="/users/update/password" class="button-link">Change Password</a></td>
+                <td>{ admincomponents.ConvertToLocalTZ(user.LastAuthenticatedAt).Format("15:04:05, 02-01") }</td>
+                <td><button id="delete-user-button" class="fatal-text">DELETE</button></td>
+              </tr>
+            } else {
+              <tr>
+                <td>{ fmt.Sprintf("%v", user.ID) }</td>
+                <td>{ user.UserName }</td>
+                <td>
+                  for _, p := range user.Permissions {
+                    <p>{ string(p) }</p>
+                  }
+                </td>
+                <td>{ admincomponents.ConvertToLocalTZ(user.CreatedAt).Format("15:04:05, 02-01") }</td>
+                <td>{ admincomponents.ConvertToLocalTZ(user.LastAuthenticatedAt).Format("15:04:05, 02-01") }</td>
+                <td></td>
+              </tr>
+            }
           }
-        }
-      </tbody>
-    </table>
+        </tbody>
+      </table>
+
+      // Construct params based on active filters, and pass to PageNavigationControls to add to links
+      @components.PageNavigationControls("admin/users", "", metadata)
+    </div>
 
     <div id="confirm-delete-modal" class="modal hidden">
       <div class="modal-content">
