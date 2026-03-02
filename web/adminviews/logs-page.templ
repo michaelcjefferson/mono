@@ -47,7 +47,7 @@ templ LogsPage(logs []*logging.Log, metadata *data.LogsMetadata, filters *data.L
     }
 
     <div class="content-fill">
-      @admincomponents.PageMetadata(metadata.FilterMetadata)
+      @admincomponents.PageMetadata(metadata.FilterMetadata, "Logs")
 
       // Pass filters to LogFilters so that styles can reflect those that are currently active
       @admincomponents.LogFilters(metadata, filters)

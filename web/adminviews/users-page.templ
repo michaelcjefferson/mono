@@ -23,7 +23,7 @@ templ UsersPage(users []*data.User, u *data.User, metadata *data.FilterMetadata,
     // </div>
 
     <div class="content-fill">
-      @admincomponents.PageMetadata(*metadata)
+      @admincomponents.PageMetadata(*metadata, "Users")
 
       <table class="users-table">
         <thead>

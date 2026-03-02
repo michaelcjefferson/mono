@@ -50,7 +50,7 @@ func (s *AdminService) GetAllUsers(ctx context.Context, filters UserFilters) ([]
 			u.created_at,
 			u.last_authenticated_at,
 			u.username,
-			GROUP_CONCAT(up.permission_code) AS permissions,
+			COALESCE(GROUP_CONCAT(up.permission_code), '') AS permissions,
 			(SELECT COUNT(*) FROM users u2 JOIN user_usernames_fts fts2 ON u2.id = fts2.rowid WHERE 1=1
 	`)
 

@@ -7,7 +7,7 @@ import (
 
 templ LogsContainer(logs []*logging.Log, metadata data.LogsMetadata) {
   <div id="logs-container">
-    @PageMetadata(metadata.FilterMetadata)
+    @PageMetadata(metadata.FilterMetadata, "Logs")
 
     // @LogList(logs)
     @LogTable(logs)
