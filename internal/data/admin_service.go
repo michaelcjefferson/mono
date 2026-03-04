@@ -23,22 +23,6 @@ func NewAdminService(appDB, monitorDB *sql.DB) *AdminService {
 
 func (s *AdminService) GetAllUsers(ctx context.Context, filters UserFilters) ([]*User, *FilterMetadata, error) {
 	// GROUP_CONCAT creates an array of values separated by ",", allowing all permissions for the user to be returned as part of one user row
-	// query := `
-	// 	SELECT
-	// 		u.id,
-	// 		u.created_at,
-	// 		u.last_authenticated_at,
-	// 		u.username,
-	// 		GROUP_CONCAT(up.permission_code) AS permissions,
-	// 		COUNT(*) OVER() AS total_count
-	// 	FROM users u
-	// 	LEFT JOIN users_permissions up ON up.user_id = u.id
-	// 	GROUP BY u.id
-	// 	ORDER BY u.created_at DESC
-	// ;`
-
-	// var queryBuilder strings.Builder
-	// args := []any{}
 	var query string
 	args := []any{}
 
@@ -47,31 +31,31 @@ func (s *AdminService) GetAllUsers(ctx context.Context, filters UserFilters) ([]
 		filterSQL, filterArgs := buildUserFilters(filters, true)
 
 		query = fmt.Sprintf(`
-	WITH filtered_users AS (
-		SELECT u.id
-		FROM user_usernames_fts
-		JOIN users u ON u.id = user_usernames_fts.rowid
-		WHERE 1=1 %s
-	),
-	paged_users AS (
-		SELECT u.*
-		FROM users u
-		JOIN filtered_users fu ON fu.id = u.id
-		ORDER BY %s %s, u.id DESC
-		LIMIT ? OFFSET ?
-	)
-	SELECT
-		pu.id,
-		pu.created_at,
-		pu.last_authenticated_at,
-		pu.username,
-		COALESCE(GROUP_CONCAT(up.permission_code), '') AS permissions,
-		(SELECT COUNT(*) FROM filtered_users) AS total_count
-	FROM paged_users pu
-	LEFT JOIN users_permissions up ON up.user_id = pu.id
-	GROUP BY pu.id
-	ORDER BY %s %s, pu.id DESC
-	`,
+			WITH filtered_users AS (
+				SELECT u.id
+				FROM user_usernames_fts
+				JOIN users u ON u.id = user_usernames_fts.rowid
+				WHERE 1=1 %s
+			),
+			paged_users AS (
+				SELECT u.*
+				FROM users u
+				JOIN filtered_users fu ON fu.id = u.id
+				ORDER BY %s %s, u.id DESC
+				LIMIT ? OFFSET ?
+			)
+			SELECT
+				pu.id,
+				pu.created_at,
+				pu.last_authenticated_at,
+				pu.username,
+				COALESCE(GROUP_CONCAT(up.permission_code), '') AS permissions,
+				(SELECT COUNT(*) FROM filtered_users) AS total_count
+			FROM paged_users pu
+			LEFT JOIN users_permissions up ON up.user_id = pu.id
+			GROUP BY pu.id
+			ORDER BY %s %s, pu.id DESC
+			`,
 			filterSQL,
 			filters.sortColumn(),
 			filters.sortDirection(),
@@ -117,9 +101,6 @@ func (s *AdminService) GetAllUsers(ctx context.Context, filters UserFilters) ([]
 
 		args = append(filterArgs, filters.limit(), filters.offset())
 	}
-
-	// log.Println("running GetAllUsers query")
-	// log.Println(queryBuilder.String())
 
 	rows, err := s.Users.DB.QueryContext(ctx, query, args...)
 	if err != nil {
@@ -171,21 +152,6 @@ func (s *AdminService) GetAllUsers(ctx context.Context, filters UserFilters) ([]
 }
 
 // Dynamically build filters for GetAllUsers query, based on filters provided
-func getAllUsersFilterQueryHelper(q *strings.Builder, args *[]any, filters UserFilters) {
-	if filters.UserName != "" {
-		q.WriteString(" AND user_usernames_fts MATCH ?")
-		*args = append(*args, filters.UserName)
-	}
-	if len(filters.UserID) > 0 {
-		qp := fmt.Sprintf(" AND id IN (%s)", Placeholders(len(filters.UserID)))
-		q.WriteString(qp)
-		// q.WriteString(" AND level = ?")
-		for _, val := range filters.UserID {
-			*args = append(*args, val)
-		}
-	}
-}
-
 func buildUserFilters(filters UserFilters, includeFTS bool) (string, []any) {
 	var parts []string
 	var args []any

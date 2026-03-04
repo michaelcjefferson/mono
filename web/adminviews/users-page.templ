@@ -22,64 +22,178 @@ templ UsersPage(users []*data.User, u *data.User, metadata *data.FilterMetadata,
     //   </a>
     // </div>
 
+    // <div class="content-fill">
+    //   @admincomponents.PageMetadata(*metadata, "Users")
+
+    //   <form class="search-bar" id="username-search-form">
+    //     <input type="text" name="username-search-bar" value={filters.UserName} id="username-search-bar" placeholder="Search usernames...">
+
+    //     <button type="submit" class="search-button">
+    //       Search
+    //     </button>
+    //   </form>
+
+    //   <table class="users-table">
+    //     <thead>
+    //       <tr>
+    //         <th>ID</th>
+    //         <th>Username</th>
+    //         <th>Permissions</th>
+    //         <th>Created At</th>
+    //         <th>Last Authenticated At</th>
+    //         <th></th>
+    //       </tr>
+    //     </thead>
+    //     <tbody>
+    //       for _, user := range users {
+    //         if user.ID == u.ID {
+    //           <tr>
+    //             <td>{ fmt.Sprintf("%v", user.ID) }</td>
+    //             <td>{ user.UserName }</td>
+    //             <td>
+    //               for _, p := range user.Permissions {
+    //                 <p>{ string(p) }</p>
+    //               }
+    //             </td>
+    //             <td><a href="/users/update/password" class="button-link">Change Password</a></td>
+    //             <td>{ admincomponents.ConvertToLocalTZ(user.LastAuthenticatedAt).Format("15:04:05, 02-01") }</td>
+    //             <td><button id="delete-user-button" class="fatal-text">DELETE</button></td>
+    //           </tr>
+    //         } else {
+    //           <tr>
+    //             <td>{ fmt.Sprintf("%v", user.ID) }</td>
+    //             <td>{ user.UserName }</td>
+    //             <td>
+    //               for _, p := range user.Permissions {
+    //                 <p>{ string(p) }</p>
+    //               }
+    //             </td>
+    //             <td>{ admincomponents.ConvertToLocalTZ(user.CreatedAt).Format("15:04:05, 02-01") }</td>
+    //             <td>{ admincomponents.ConvertToLocalTZ(user.LastAuthenticatedAt).Format("15:04:05, 02-01") }</td>
+    //             <td></td>
+    //           </tr>
+    //         }
+    //       }
+    //     </tbody>
+    //   </table>
+
+    //   // Construct params based on active filters, and pass to PageNavigationControls to add to links
+    //   @components.PageNavigationControls("admin/users", "", metadata)
+    // </div>
+
     <div class="content-fill">
-      @admincomponents.PageMetadata(*metadata, "Users")
+		@admincomponents.PageMetadata(*metadata, "Users")
 
-      <form class="search-bar" id="username-search-form">
-        <input type="text" name="username-search-bar" value={filters.UserName} id="username-search-bar" placeholder="Search usernames...">
+		<form class="search-bar" id="username-search-form">
+			<input
+				type="text"
+				name="username-search-bar"
+				value={ filters.UserName }
+				id="username-search-bar"
+				placeholder="Search usernames..."
+			/>
+			<button type="submit" class="search-button">Search</button>
+		</form>
 
-        <button type="submit" class="search-button">
-          Search
-        </button>
-      </form>
+		<div class="user-cards-grid">
+			for _, user := range users {
+				<div class="user-card" id={ fmt.Sprintf("user-card-%v", user.ID) }>
+					<!-- Card Header -->
+					<div class="user-card__header">
+						<div class="user-card__identity">
+							<div class="user-card__avatar" aria-hidden="true">
+								{ string([]rune(user.UserName)[0:1]) }
+							</div>
+							<div class="user-card__info">
+								<div class="user-card__name-row">
+									<span class="user-card__username">{ user.UserName }</span>
+									if user.ID == u.ID {
+										<span class="badge badge--self">You</span>
+									}
+								</div>
+								<span class="user-card__id">ID: { fmt.Sprintf("%v", user.ID) }</span>
+							</div>
+						</div>
 
-      <table class="users-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Username</th>
-            <th>Permissions</th>
-            <th>Created At</th>
-            <th>Last Authenticated At</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          for _, user := range users {
-            if user.ID == u.ID {
-              <tr>
-                <td>{ fmt.Sprintf("%v", user.ID) }</td>
-                <td>{ user.UserName }</td>
-                <td>
-                  for _, p := range user.Permissions {
-                    <p>{ string(p) }</p>
-                  }
-                </td>
-                <td><a href="/users/update/password" class="button-link">Change Password</a></td>
-                <td>{ admincomponents.ConvertToLocalTZ(user.LastAuthenticatedAt).Format("15:04:05, 02-01") }</td>
-                <td><button id="delete-user-button" class="fatal-text">DELETE</button></td>
-              </tr>
-            } else {
-              <tr>
-                <td>{ fmt.Sprintf("%v", user.ID) }</td>
-                <td>{ user.UserName }</td>
-                <td>
-                  for _, p := range user.Permissions {
-                    <p>{ string(p) }</p>
-                  }
-                </td>
-                <td>{ admincomponents.ConvertToLocalTZ(user.CreatedAt).Format("15:04:05, 02-01") }</td>
-                <td>{ admincomponents.ConvertToLocalTZ(user.LastAuthenticatedAt).Format("15:04:05, 02-01") }</td>
-                <td></td>
-              </tr>
-            }
-          }
-        </tbody>
-      </table>
+						<button
+							class="user-card__expand-btn"
+							aria-expanded="false"
+							aria-controls={ fmt.Sprintf("user-card-details-%v", user.ID) }
+							onclick="toggleUserCard(this)"
+						>
+							<span class="user-card__expand-icon">&#8964;</span>
+						</button>
+					</div>
 
-      // Construct params based on active filters, and pass to PageNavigationControls to add to links
-      @components.PageNavigationControls("admin/users", "", metadata)
-    </div>
+					<!-- Card Summary (always visible) -->
+					<div class="user-card__summary">
+						<div class="user-card__stat">
+							<span class="user-card__stat-label">Permissions</span>
+							<span class="user-card__stat-value">{ admincomponents.PermissionSummary(user.Permissions) }</span>
+						</div>
+						<div class="user-card__stat">
+							<span class="user-card__stat-label">Member since</span>
+							<span class="user-card__stat-value">{ admincomponents.ConvertToLocalTZ(user.CreatedAt).Format("Jan 2, 2006") }</span>
+						</div>
+						<div class="user-card__stat">
+							<span class="user-card__stat-label">Last seen</span>
+							<span class="user-card__stat-value">{ admincomponents.TimeAgo(user.LastAuthenticatedAt) }</span>
+						</div>
+					</div>
+
+					<!-- Expanded Details -->
+					<div
+						class="user-card__details"
+						id={ fmt.Sprintf("user-card-details-%v", user.ID) }
+						hidden
+					>
+						<div class="user-card__details-inner">
+							<!-- Permissions Detail -->
+							<div class="user-card__section">
+								<h4 class="user-card__section-title">Permissions</h4>
+								<div class="user-card__badges">
+									for _, p := range user.Permissions {
+										<span class={ admincomponents.PermissionBadgeClass(string(p)) }>{ string(p) }</span>
+									}
+									if len(user.Permissions) == 0 {
+										<span class="user-card__empty">No permissions assigned</span>
+									}
+								</div>
+							</div>
+
+							<!-- Actions -->
+							<div class="user-card__section">
+								<h4 class="user-card__section-title">Actions</h4>
+								<div class="user-card__actions">
+									if user.ID == u.ID {
+										<a href="/users/update/password" class="user-card__action-btn user-card__action-btn--secondary">
+											Change Password
+										</a>
+									}
+									<a href={ templ.SafeURL(fmt.Sprintf("/admin/users/%v", user.ID)) } class="user-card__action-btn user-card__action-btn--secondary">
+										View Activity
+									</a>
+									<a href={ templ.SafeURL(fmt.Sprintf("/admin/users/%v/permissions", user.ID)) } class="user-card__action-btn user-card__action-btn--secondary">
+										Edit Permissions
+									</a>
+									if user.ID != u.ID {
+										<button
+											id={ fmt.Sprintf("delete-user-button-%v", user.ID) }
+											class="user-card__action-btn user-card__action-btn--danger"
+										>
+											Delete User
+										</button>
+									}
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			}
+		</div>
+
+		@components.PageNavigationControls("admin/users", "", metadata)
+	</div>
 
     <div id="confirm-delete-modal" class="modal hidden">
       <div class="modal-content">
@@ -135,6 +249,22 @@ templ UsersPage(users []*data.User, u *data.User, metadata *data.FilterMetadata,
           window.location.href = "/admin/users?" + params.toString();
         } else {
           window.location.href = "/admin/users";
+        }
+      }
+
+      function toggleUserCard(btn) {
+        const expanded = btn.getAttribute('aria-expanded') === 'true';
+        const targetId = btn.getAttribute('aria-controls');
+        const details = document.getElementById(targetId);
+        const card = btn.closest('.user-card');
+
+        btn.setAttribute('aria-expanded', String(!expanded));
+        if (expanded) {
+          details.hidden = true;
+          card.classList.remove('user-card--expanded');
+        } else {
+          details.hidden = false;
+          card.classList.add('user-card--expanded');
         }
       }
     </script>
