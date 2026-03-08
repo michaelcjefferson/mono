@@ -185,9 +185,18 @@ func (app *application) getUsersAdminPageHandler(c echo.Context) error {
 }
 
 func (app *application) deleteUserByIDHandler(c echo.Context) error {
+	u := app.contextGetUser(c)
+
 	id, err := app.readIDParam(c)
 	if err != nil {
 		return app.errorAPIResponse(c, err, apperrors.ErrCodeBadRequest, nil)
+	}
+
+	if !u.HasPermission(data.PermissionAdminCreate) {
+		app.logger.Warn("user tried to delete other user without permission", map[string]any{
+			"user":                    u,
+			"tried_to_delete_user_id": id,
+		})
 	}
 
 	err = app.models.UserService.Users.Delete(c.Request().Context(), int64(id))
@@ -199,6 +208,11 @@ func (app *application) deleteUserByIDHandler(c echo.Context) error {
 			return app.serverErrorResponse(c, err, nil)
 		}
 	}
+
+	app.logger.Info("user deleted by admin", map[string]any{
+		"deleted_user_id": id,
+		"deleted_by":      u,
+	})
 
 	return app.redirectResponse(c, "/admin/users", http.StatusAccepted, "user successfully deleted")
 }
