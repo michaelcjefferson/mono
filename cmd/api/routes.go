@@ -92,6 +92,7 @@ func (app *application) routes() http.Handler {
 
 	authWeb.GET("/profile/username", app.usernamePageHandler)
 	authWeb.POST("/profile/username/update", app.usernameUpdateHandler)
+	authWeb.DELETE("/profile/delete/account", app.deleteAccountHandler)
 
 	authWeb.GET("/", app.homepagePageHandler)
 
@@ -105,6 +106,7 @@ func (app *application) routes() http.Handler {
 	adminWeb.DELETE("/logs/:id", app.deleteIndividualLogHandler)
 
 	adminWeb.GET("/users", app.getUsersAdminPageHandler)
+	adminWeb.DELETE("/users/:id", app.deleteUserByIDHandler)
 
 	// No auth required for this endpoint
 	router.POST("/admin/init", app.initialiseAdmin)

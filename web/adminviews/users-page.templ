@@ -2,6 +2,7 @@ package adminviews
 
 import (
   "fmt"
+  "strconv"
 
   "placeholder_project_tag/internal/data"
   "placeholder_project_tag/web/admincomponents"
@@ -16,223 +17,187 @@ templ UsersPage(users []*data.User, u *data.User, metadata *data.FilterMetadata,
       @admincomponents.NavBar()
     }
 
-    // <div class="card register-card">
-    //   <a href="/register">
-    //     <button id="register-button" class="info-text">Register New Admin</button>
-    //   </a>
-    // </div>
-
-    // <div class="content-fill">
-    //   @admincomponents.PageMetadata(*metadata, "Users")
-
-    //   <form class="search-bar" id="username-search-form">
-    //     <input type="text" name="username-search-bar" value={filters.UserName} id="username-search-bar" placeholder="Search usernames...">
-
-    //     <button type="submit" class="search-button">
-    //       Search
-    //     </button>
-    //   </form>
-
-    //   <table class="users-table">
-    //     <thead>
-    //       <tr>
-    //         <th>ID</th>
-    //         <th>Username</th>
-    //         <th>Permissions</th>
-    //         <th>Created At</th>
-    //         <th>Last Authenticated At</th>
-    //         <th></th>
-    //       </tr>
-    //     </thead>
-    //     <tbody>
-    //       for _, user := range users {
-    //         if user.ID == u.ID {
-    //           <tr>
-    //             <td>{ fmt.Sprintf("%v", user.ID) }</td>
-    //             <td>{ user.UserName }</td>
-    //             <td>
-    //               for _, p := range user.Permissions {
-    //                 <p>{ string(p) }</p>
-    //               }
-    //             </td>
-    //             <td><a href="/users/update/password" class="button-link">Change Password</a></td>
-    //             <td>{ admincomponents.ConvertToLocalTZ(user.LastAuthenticatedAt).Format("15:04:05, 02-01") }</td>
-    //             <td><button id="delete-user-button" class="fatal-text">DELETE</button></td>
-    //           </tr>
-    //         } else {
-    //           <tr>
-    //             <td>{ fmt.Sprintf("%v", user.ID) }</td>
-    //             <td>{ user.UserName }</td>
-    //             <td>
-    //               for _, p := range user.Permissions {
-    //                 <p>{ string(p) }</p>
-    //               }
-    //             </td>
-    //             <td>{ admincomponents.ConvertToLocalTZ(user.CreatedAt).Format("15:04:05, 02-01") }</td>
-    //             <td>{ admincomponents.ConvertToLocalTZ(user.LastAuthenticatedAt).Format("15:04:05, 02-01") }</td>
-    //             <td></td>
-    //           </tr>
-    //         }
-    //       }
-    //     </tbody>
-    //   </table>
-
-    //   // Construct params based on active filters, and pass to PageNavigationControls to add to links
-    //   @components.PageNavigationControls("admin/users", "", metadata)
-    // </div>
-
     <div class="content-fill">
 		@admincomponents.PageMetadata(*metadata, "Users")
 
-		<form class="search-bar" id="username-search-form">
-			<input
-				type="text"
-				name="username-search-bar"
-				value={ filters.UserName }
-				id="username-search-bar"
-				placeholder="Search usernames..."
-			/>
-			<button type="submit" class="search-button">Search</button>
-		</form>
+      <form class="search-bar" id="username-search-form">
+        <input
+          type="text"
+          name="username-search-bar"
+          value={ filters.UserName }
+          id="username-search-bar"
+          placeholder="Search usernames..."
+        />
+        <button type="submit" class="search-button">Search</button>
+      </form>
 
-		<div class="user-cards-grid">
-			for _, user := range users {
-				<div class="user-card" id={ fmt.Sprintf("user-card-%v", user.ID) }>
-					<!-- Card Header -->
-					<div class="user-card__header">
-						<div class="user-card__identity">
-							<div class="user-card__avatar" aria-hidden="true">
-								{ string([]rune(user.UserName)[0:1]) }
-							</div>
-							<div class="user-card__info">
-								<div class="user-card__name-row">
-									<span class="user-card__username">{ user.UserName }</span>
-									if user.ID == u.ID {
-										<span class="badge badge--self">You</span>
-									}
-								</div>
-								<span class="user-card__id">ID: { fmt.Sprintf("%v", user.ID) }</span>
-							</div>
-						</div>
+      <div class="user-cards-grid">
+        for _, user := range users {
+          <div class="user-card" id={ fmt.Sprintf("user-card-%v", user.ID) }>
+            <!-- Card Header -->
+            <div class="user-card__header">
+              <div class="user-card__identity">
+                <div class="user-card__avatar" aria-hidden="true">
+                  { string([]rune(user.UserName)[0:1]) }
+                </div>
+                <div class="user-card__info">
+                  <div class="user-card__name-row">
+                    <span class="user-card__username">{ user.UserName }</span>
+                    if user.ID == u.ID {
+                      <span class="badge badge--self">You</span>
+                    }
+                  </div>
+                  <span class="user-card__id">ID: { fmt.Sprintf("%v", user.ID) }</span>
+                </div>
+              </div>
 
-						<button
-							class="user-card__expand-btn"
-							aria-expanded="false"
-							aria-controls={ fmt.Sprintf("user-card-details-%v", user.ID) }
-							onclick="toggleUserCard(this)"
-						>
-							<span class="user-card__expand-icon">&#8964;</span>
-						</button>
-					</div>
+              <button
+                class="user-card__expand-btn"
+                aria-expanded="false"
+                aria-controls={ fmt.Sprintf("user-card-details-%v", user.ID) }
+                onclick="toggleUserCard(this)"
+              >
+                <span class="user-card__expand-icon">&#8964;</span>
+              </button>
+            </div>
 
-					<!-- Card Summary (always visible) -->
-					<div class="user-card__summary">
-						<div class="user-card__stat">
-							<span class="user-card__stat-label">Permissions</span>
-							<span class="user-card__stat-value">{ admincomponents.PermissionSummary(user.Permissions) }</span>
-						</div>
-						<div class="user-card__stat">
-							<span class="user-card__stat-label">Member since</span>
-							<span class="user-card__stat-value">{ admincomponents.ConvertToLocalTZ(user.CreatedAt).Format("Jan 2, 2006") }</span>
-						</div>
-						<div class="user-card__stat">
-							<span class="user-card__stat-label">Last seen</span>
-							<span class="user-card__stat-value">{ admincomponents.TimeAgo(user.LastAuthenticatedAt) }</span>
-						</div>
-					</div>
+            <!-- Card Summary (always visible) -->
+            <div class="user-card__summary">
+              <div class="user-card__stat">
+                <span class="user-card__stat-label">Permissions</span>
+                <span class="user-card__stat-value">{ admincomponents.PermissionSummary(user.Permissions) }</span>
+              </div>
+              <div class="user-card__stat">
+                <span class="user-card__stat-label">Member since</span>
+                <span class="user-card__stat-value">{ admincomponents.ConvertToLocalTZ(user.CreatedAt).Format("Jan 2, 2006") }</span>
+              </div>
+              <div class="user-card__stat">
+                <span class="user-card__stat-label">Last seen</span>
+                <span class="user-card__stat-value">{ admincomponents.TimeAgo(user.LastAuthenticatedAt) }</span>
+              </div>
+            </div>
 
-					<!-- Expanded Details -->
-					<div
-						class="user-card__details"
-						id={ fmt.Sprintf("user-card-details-%v", user.ID) }
-						hidden
-					>
-						<div class="user-card__details-inner">
-							<!-- Permissions Detail -->
-							<div class="user-card__section">
-								<h4 class="user-card__section-title">Permissions</h4>
-								<div class="user-card__badges">
-									for _, p := range user.Permissions {
-										<span class={ admincomponents.PermissionBadgeClass(string(p)) }>{ string(p) }</span>
-									}
-									if len(user.Permissions) == 0 {
-										<span class="user-card__empty">No permissions assigned</span>
-									}
-								</div>
-							</div>
+            <!-- Expanded Details -->
+            <div
+              class="user-card__details"
+              id={ fmt.Sprintf("user-card-details-%v", user.ID) }
+              hidden
+            >
+              <div class="user-card__details-inner">
+                <!-- Permissions Detail -->
+                <div class="user-card__section">
+                  <h4 class="user-card__section-title">Permissions</h4>
+                  <div class="user-card__badges">
+                    for _, p := range user.Permissions {
+                      <span class={ admincomponents.PermissionBadgeClass(string(p)) }>{ string(p) }</span>
+                    }
+                    if len(user.Permissions) == 0 {
+                      <span class="user-card__empty">No permissions assigned</span>
+                    }
+                  </div>
+                </div>
 
-							<!-- Actions -->
-							<div class="user-card__section">
-								<h4 class="user-card__section-title">Actions</h4>
-								<div class="user-card__actions">
-									if user.ID == u.ID {
-										<a href="/users/update/password" class="user-card__action-btn user-card__action-btn--secondary">
-											Change Password
-										</a>
-									}
-									<a href={ templ.SafeURL(fmt.Sprintf("/admin/users/%v", user.ID)) } class="user-card__action-btn user-card__action-btn--secondary">
-										View Activity
-									</a>
-									<a href={ templ.SafeURL(fmt.Sprintf("/admin/users/%v/permissions", user.ID)) } class="user-card__action-btn user-card__action-btn--secondary">
-										Edit Permissions
-									</a>
-									if user.ID != u.ID {
-										<button
-											id={ fmt.Sprintf("delete-user-button-%v", user.ID) }
-											class="user-card__action-btn user-card__action-btn--danger"
-										>
-											Delete User
-										</button>
-									}
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			}
-		</div>
+                <!-- Actions -->
+                <div class="user-card__section">
+                  <h4 class="user-card__section-title">Actions</h4>
+                  <div class="user-card__actions">
+                    if user.ID == u.ID {
+                      <a href="/users/update/password" class="user-card__action-btn user-card__action-btn--secondary">
+                        Change Password
+                      </a>
+                    }
+                    <a href={ templ.SafeURL(fmt.Sprintf("/admin/users/%v", user.ID)) } class="user-card__action-btn user-card__action-btn--secondary">
+                      View Activity
+                    </a>
+                    <a href={ templ.SafeURL(fmt.Sprintf("/admin/users/%v/permissions", user.ID)) } class="user-card__action-btn user-card__action-btn--secondary">
+                      Edit Permissions
+                    </a>
+                    if user.ID != u.ID {
+                      <button
+                        id={ fmt.Sprintf("delete-user-button-%v", user.ID) }
+                        class="user-card__action-btn user-card__action-btn--danger delete-user-button"
+                        aria-label="Delete"
+                        data-user-id={ strconv.FormatInt(user.ID, 10) }
+                      >
+                        Delete User
+                      </button>
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
 
-		@components.PageNavigationControls("admin/users", "", metadata)
-	</div>
+      @components.PageNavigationControls("admin/users", "", metadata)
+    </div>
 
     <div id="confirm-delete-modal" class="modal hidden">
       <div class="modal-content">
-        <p>Are you sure you want to delete your account?</p>
-        <p>Another admin will need to create a new account for you if you want to use this service again.</p>
-        <p>If this is the last existing admin account, you will need to set up the whole service again from scratch to access it.</p>
+        <p>Are you sure you want to delete this account?</p>
+        <p>User ID: <span id="user-id-span"></span></p>
         <button id="confirm-delete">Yes</button>
         <button id="confirm-cancel">Cancel</button>
       </div>
     </div>
 
     <script>
+      let userIDToDelete;
+
       const modal = document.getElementById("confirm-delete-modal");
+      const userIDSpan = document.getElementById("user-id-span")
 
       document.getElementById("username-search-form").addEventListener("submit", (e) => {
         e.preventDefault();
         getFilteredUsers();
       });
 
-      document.getElementById("delete-user-button").addEventListener("click", () => {
-        modal.classList.remove("hidden");
+      // document.getElementById("delete-user-button").addEventListener("click", () => {
+      //   modal.classList.remove("hidden");
+      // });
+
+      const delUserButtons = document.querySelectorAll(".delete-user-button");
+
+      delUserButtons.forEach(deleteButton => {
+        deleteButton.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          userIDToDelete = deleteButton.dataset.userId;
+          userIDSpan.textContent = userIDToDelete;
+          modal.classList.remove("hidden");
+        });
       });
 
       document.getElementById("confirm-cancel").addEventListener("click", () => {
         modal.classList.add("hidden");
+        userIDSpan.textContent = "";
       });
 
-      document.getElementById("confirm-delete").addEventListener("click", async () => {
+      document.getElementById("confirm-delete").addEventListener("click", async (id) => {
         try {
-          const res = await fetch("/users/delete", { method: "GET" });
+          const res = await fetch("/admin/users/" + userIDToDelete, { method: "DELETE" });
+
+          if (res.redirected) {
+            // Get the redirect URL from the Location header
+            let redirectUrl = res.url;
+            // Redirect the user manually
+            window.location.href = redirectUrl;
+            return;
+          }
+
           if (res.ok) {
-            window.location.href = "/sign-in";
+            // console.log(`Log ID ${logIDToDelete} successfully deleted`);
+            // Success
+            Alpine.store('toast').success(`User ID ${userIDToDelete} successfully deleted`);
           } else {
             // TODO: Switch this for an error message following the same flow as other HTML pages that make requests
-            alert("Something went wrong.")
+            console.error(err);
+            Alpine.store('toast').error(`Error deleting User ID ${userIDToDelete}.`);
           }
         } catch (err) {
           console.error(err);
-          alert("Network error");
+          Alpine.store('toast').error(`Error deleting User ID ${userIDToDelete}.`);
         }
       });
 

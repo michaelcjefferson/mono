@@ -183,3 +183,22 @@ func (app *application) getUsersAdminPageHandler(c echo.Context) error {
 
 	return app.Render(c, http.StatusAccepted, adminviews.UsersPage(users, u, meta, &filters, hasPerm, true))
 }
+
+func (app *application) deleteUserByIDHandler(c echo.Context) error {
+	id, err := app.readIDParam(c)
+	if err != nil {
+		return app.errorAPIResponse(c, err, apperrors.ErrCodeBadRequest, nil)
+	}
+
+	err = app.models.UserService.Users.Delete(c.Request().Context(), int64(id))
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			return app.errorAPIResponse(c, err, apperrors.ErrCodeResourceNotFound, nil)
+		default:
+			return app.serverErrorResponse(c, err, nil)
+		}
+	}
+
+	return app.redirectResponse(c, "/admin/users", http.StatusAccepted, "user successfully deleted")
+}

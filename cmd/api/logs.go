@@ -103,7 +103,7 @@ func (app *application) getIndividualLogPageHandler(c echo.Context) error {
 func (app *application) deleteIndividualLogHandler(c echo.Context) error {
 	id, err := app.readIDParam(c)
 	if err != nil {
-		return app.errorAPIResponse(c, err, apperrors.ErrCodeResourceNotFound, nil)
+		return app.errorAPIResponse(c, err, apperrors.ErrCodeBadRequest, nil)
 	}
 
 	err = app.models.Logs.DeleteForID(c.Request().Context(), id)
