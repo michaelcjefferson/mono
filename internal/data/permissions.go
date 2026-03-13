@@ -9,6 +9,12 @@ import (
 
 type Permission string
 
+type PermissionUpdate struct {
+	NewPerms    []Permission `json:"new_perms"`
+	RemovePerms []Permission `json:"remove_perms"`
+	UserID      *int64
+}
+
 var (
 	ErrInvalidPermission = errors.New("provided code is not a valid permission")
 	ErrPermissionDenied  = errors.New("permission to access this resource is denied")
@@ -150,7 +156,7 @@ func (m *PermissionsModel) InsertManyForUserID(tx *sql.Tx, ctx context.Context, 
 
 func (m *PermissionsModel) DeleteManyForUserID(tx *sql.Tx, ctx context.Context, perms []Permission, userID int64) error {
 	query, err := tx.PrepareContext(ctx, `
-		DELETE FROM users_permissions (user_id, permission_code)
+		DELETE FROM users_permissions
 		WHERE user_id = $1
 		AND permission_code = $2
 	;`)

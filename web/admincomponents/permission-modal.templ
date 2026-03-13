@@ -5,16 +5,14 @@ import (
   "placeholder_project_tag/internal/data"
 )
 
+// TODO: pull available permissions from DB - load on users-page, pass to modal
 // allPermissions defines the full set of known permissions in the system.
 // Grouped by namespace for display purposes.
 // Extend this list as new permissions are added.
 var allPermissions = []data.Permission{
 	"user:access",
-	"user:post",
 	"admin:access",
 	"admin:create",
-	"admin:delete",
-	"admin:manage",
 }
 
 // permissionNamespace extracts the namespace prefix from a permission string
@@ -256,11 +254,4 @@ templ PermissionModal(editUser data.User, currentUser *data.User) {
       initPermEditor(uid, originalPerms);
     })();
   </script>
-	// <script>
-	// 	(function() {
-	// 		var uid = { fmt.Sprintf("%v", editUser.ID) };
-	// 		var originalPerms = { permissionsAsJSON(editUser.Permissions) };
-	// 		initPermEditor(uid, originalPerms);
-	// 	})();
-	// </script>
 }

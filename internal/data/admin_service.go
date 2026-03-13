@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -185,23 +186,27 @@ func buildUserFilters(filters UserFilters, includeFTS bool) (string, []any) {
 	return " AND " + strings.Join(parts, " AND "), args
 }
 
-func (s *AdminService) UpdateForUserID(ctx context.Context, removePerms, newPerms []Permission, userID int64) error {
+func (s *AdminService) UpdatePermsForUserID(ctx context.Context, permUpdate *PermissionUpdate) error {
+	if permUpdate.UserID == nil {
+		return errors.New("missing user id from permission update request")
+	}
+
 	tx, err := s.Users.DB.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
 
-	if removePerms != nil {
-		err = s.Permissions.DeleteManyForUserID(tx, ctx, removePerms, userID)
+	if len(permUpdate.RemovePerms) > 0 {
+		err = s.Permissions.DeleteManyForUserID(tx, ctx, permUpdate.RemovePerms, *permUpdate.UserID)
 
 		if err != nil {
 			return ProcessSQLError(err, "failed to remove perms for user")
 		}
 	}
 
-	if newPerms != nil {
-		err = s.Permissions.InsertManyForUserID(tx, ctx, newPerms, userID)
+	if len(permUpdate.NewPerms) > 0 {
+		err = s.Permissions.InsertManyForUserID(tx, ctx, permUpdate.NewPerms, *permUpdate.UserID)
 
 		if err != nil {
 			return ProcessSQLError(err, "failed to insert perms for user")

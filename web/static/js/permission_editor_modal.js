@@ -239,8 +239,8 @@ async function savePermissions(userId) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        newPerms: toAdd,
-        removePerms: toRemove,
+        new_perms: toAdd,
+        remove_perms: toRemove,
       }),
     });
 

@@ -103,10 +103,16 @@ func (app *application) routes() http.Handler {
 	// adminWeb.GET("/logs/partial", app.getFilteredLogsHandler)
 	adminWeb.GET("/logs/:id", app.getIndividualLogPageHandler)
 	adminWeb.GET("/logs", app.getFilteredLogsPageHandler)
-	adminWeb.DELETE("/logs/:id", app.deleteIndividualLogHandler)
 
 	adminWeb.GET("/users", app.getUsersAdminPageHandler)
-	adminWeb.DELETE("/users/:id", app.deleteUserByIDHandler)
+
+	adminManageWeb := adminWeb.Group("", app.requirePermissionCode(data.PermissionAdminCreate))
+
+	adminManageWeb.DELETE("/logs/:id", app.deleteIndividualLogHandler)
+
+	adminManageWeb.DELETE("/users/:id", app.deleteUserByIDHandler)
+
+	adminManageWeb.POST("/users/:id/permissions", app.updateUserPermissionsHandler)
 
 	// No auth required for this endpoint
 	router.POST("/admin/init", app.initialiseAdmin)
