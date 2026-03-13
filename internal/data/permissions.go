@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"log"
 )
 
 type Permission string
@@ -141,6 +142,33 @@ func (m *PermissionsModel) InsertManyForUserID(tx *sql.Tx, ctx context.Context, 
 			default:
 				return err
 			}
+		}
+	}
+
+	return nil
+}
+
+func (m *PermissionsModel) DeleteManyForUserID(tx *sql.Tx, ctx context.Context, perms []Permission, userID int64) error {
+	query, err := tx.PrepareContext(ctx, `
+		DELETE FROM users_permissions (user_id, permission_code)
+		WHERE user_id = $1
+		AND permission_code = $2
+	;`)
+	if err != nil {
+		return err
+	}
+	defer query.Close()
+
+	for _, p := range perms {
+		if !p.IsValid() {
+			log.Printf("WARNING~ attempting to delete an invalid permission: %s", string(p))
+		}
+
+		args := []any{userID, string(p)}
+
+		_, err = query.ExecContext(ctx, args...)
+		if err != nil {
+			return err
 		}
 	}
 

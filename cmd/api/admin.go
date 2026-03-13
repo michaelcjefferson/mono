@@ -197,6 +197,7 @@ func (app *application) deleteUserByIDHandler(c echo.Context) error {
 			"user":                    u,
 			"tried_to_delete_user_id": id,
 		})
+
 		return app.errorAPIResponse(c, errors.New("permission denied"), apperrors.ErrCodePermissionDenied, nil)
 	}
 

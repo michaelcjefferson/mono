@@ -1,0 +1,266 @@
+package admincomponents
+
+import (
+	"fmt"
+  "placeholder_project_tag/internal/data"
+)
+
+// allPermissions defines the full set of known permissions in the system.
+// Grouped by namespace for display purposes.
+// Extend this list as new permissions are added.
+var allPermissions = []data.Permission{
+	"user:access",
+	"user:post",
+	"admin:access",
+	"admin:create",
+	"admin:delete",
+	"admin:manage",
+}
+
+// permissionNamespace extracts the namespace prefix from a permission string
+// e.g. "admin:create" -> "admin"
+func permissionNamespace(p data.Permission) string {
+	s := string(p)
+	for i, c := range s {
+		if c == ':' {
+			return s[:i]
+		}
+	}
+	return s
+}
+
+// permissionAction extracts the action suffix from a permission string
+// e.g. "admin:create" -> "create"
+func permissionAction(p data.Permission) string {
+	s := string(p)
+	for i, c := range s {
+		if c == ':' {
+			return s[i+1:]
+		}
+	}
+	return s
+}
+
+// hasPermission checks if a permission is in the list
+func hasPermission(permissions []data.Permission, p data.Permission) bool {
+	for _, existing := range permissions {
+		if existing == p {
+			return true
+		}
+	}
+	return false
+}
+
+// groupPermissionsByNamespace groups permissions by their namespace prefix
+func groupPermissionsByNamespace(permissions []data.Permission) map[string][]data.Permission {
+	groups := make(map[string][]data.Permission)
+	for _, p := range permissions {
+		ns := permissionNamespace(p)
+		groups[ns] = append(groups[ns], p)
+	}
+	return groups
+}
+
+// permissionsAsJSON serializes a permission list to a JS array literal for inline script use
+func permissionsAsJSON(permissions []data.Permission) string {
+	if len(permissions) == 0 {
+		return "[]"
+	}
+	result := "["
+	for i, p := range permissions {
+		if i > 0 {
+			result += ","
+		}
+		result += `"` + string(p) + `"`
+	}
+	result += "]"
+	return result
+}
+
+// PermissionEditorModal renders the modal for editing a single user's permissions.
+// It is intended to be rendered inline on the users list page and toggled via JS.
+templ PermissionModal(editUser data.User, currentUser *data.User) {
+	<div
+		class="perm-modal-backdrop"
+		id={ fmt.Sprintf("perm-modal-backdrop-%v", editUser.ID) }
+		role="dialog"
+		aria-modal="true"
+		aria-labelledby={ fmt.Sprintf("perm-modal-title-%v", editUser.ID) }
+		hidden
+		onclick="handlePermModalBackdropClick(event, this)"
+	>
+		<div class="perm-modal" onclick="event.stopPropagation()">
+			<!-- Modal header -->
+			<div class="perm-modal__header">
+				<div class="perm-modal__title-group">
+					<h2 class="perm-modal__title" id={ fmt.Sprintf("perm-modal-title-%v", editUser.ID) }>
+						Edit Permissions
+					</h2>
+					<span class="perm-modal__subtitle">{ editUser.UserName }</span>
+				</div>
+				<button
+					class="perm-modal__close"
+					aria-label="Close permission editor"
+					onclick={ templ.ComponentScript{Call: fmt.Sprintf("closePermModal('%v')", editUser.ID)} }
+				>
+					&#x2715;
+				</button>
+			</div>
+
+			<!-- Pending changes banner (hidden until there are changes) -->
+			<div class="perm-modal__changes-banner" id={ fmt.Sprintf("perm-changes-banner-%v", editUser.ID) } hidden>
+				<span class="perm-modal__changes-text" id={ fmt.Sprintf("perm-changes-text-%v", editUser.ID) }></span>
+			</div>
+
+			<!-- Error banner -->
+			<div class="perm-modal__error-banner" id={ fmt.Sprintf("perm-error-banner-%v", editUser.ID) } hidden>
+				<span class="perm-modal__error-icon">&#9888;</span>
+				<span class="perm-modal__error-text" id={ fmt.Sprintf("perm-error-text-%v", editUser.ID) }>
+					Failed to update permissions. Changes have been reverted.
+				</span>
+			</div>
+
+			<div class="perm-modal__body">
+				<!-- Current permissions -->
+				<section class="perm-section">
+					<div class="perm-section__header">
+						<h3 class="perm-section__title">Current Permissions</h3>
+						<span class="perm-section__hint">Click to remove</span>
+					</div>
+					<div
+						class="perm-section__pills"
+						id={ fmt.Sprintf("perm-current-%v", editUser.ID) }
+						aria-label="Current permissions — click to remove"
+					>
+						if len(editUser.Permissions) == 0 {
+							<span class="perm-empty" id={ fmt.Sprintf("perm-current-empty-%v", editUser.ID) }>
+								No permissions assigned
+							</span>
+						} else {
+							<span class="perm-empty" id={ fmt.Sprintf("perm-current-empty-%v", editUser.ID) } hidden>
+								No permissions assigned
+							</span>
+						}
+						for _, p := range editUser.Permissions {
+							<button
+								class={ "perm-pill perm-pill--current perm-pill--" + permissionNamespace(p) }
+								data-permission={ string(p) }
+								data-user-id={ fmt.Sprintf("%v", editUser.ID) }
+								onclick="handleRemovePermission(this)"
+								type="button"
+								title={ "Remove " + string(p) }
+							>
+								<span class="perm-pill__ns">{ permissionNamespace(p) }</span>
+								<span class="perm-pill__sep">:</span>
+								<span class="perm-pill__action">{ permissionAction(p) }</span>
+								<span class="perm-pill__remove" aria-hidden="true">&#x2715;</span>
+							</button>
+						}
+					</div>
+				</section>
+
+				<div class="perm-divider">
+					<span class="perm-divider__label">Available to add</span>
+				</div>
+
+				<!-- Available permissions -->
+				<section class="perm-section">
+					<div class="perm-section__header">
+						<h3 class="perm-section__title">Available Permissions</h3>
+						<span class="perm-section__hint">Click to add</span>
+					</div>
+					<div
+						class="perm-section__pills"
+						id={ fmt.Sprintf("perm-available-%v", editUser.ID) }
+						aria-label="Available permissions — click to add"
+					>
+						if len(editUser.Permissions) == len(allPermissions) {
+							<span class="perm-empty" id={ fmt.Sprintf("perm-available-empty-%v", editUser.ID) }>
+								All permissions assigned
+							</span>
+						} else {
+							<span class="perm-empty" id={ fmt.Sprintf("perm-available-empty-%v", editUser.ID) } hidden>
+								All permissions assigned
+							</span>
+						}
+						for _, p := range allPermissions {
+							if !hasPermission(editUser.Permissions, p) {
+								<button
+									class={ "perm-pill perm-pill--available perm-pill--" + permissionNamespace(p) }
+									data-permission={ string(p) }
+									data-user-id={ fmt.Sprintf("%v", editUser.ID) }
+									onclick="handleAddPermission(this)"
+									type="button"
+									title={ "Add " + string(p) }
+								>
+									<span class="perm-pill__ns">{ permissionNamespace(p) }</span>
+									<span class="perm-pill__sep">:</span>
+									<span class="perm-pill__action">{ permissionAction(p) }</span>
+									<span class="perm-pill__add" aria-hidden="true">+</span>
+								</button>
+							} else {
+								<button
+									class={ "perm-pill perm-pill--available perm-pill--" + permissionNamespace(p) }
+									data-permission={ string(p) }
+									data-user-id={ fmt.Sprintf("%v", editUser.ID) }
+									onclick="handleAddPermission(this)"
+									type="button"
+									title={ "Add " + string(p) }
+									hidden
+								>
+									<span class="perm-pill__ns">{ permissionNamespace(p) }</span>
+									<span class="perm-pill__sep">:</span>
+									<span class="perm-pill__action">{ permissionAction(p) }</span>
+									<span class="perm-pill__add" aria-hidden="true">+</span>
+								</button>
+							}
+						}
+					</div>
+				</section>
+			</div>
+
+			<!-- Modal footer -->
+			<div class="perm-modal__footer">
+				<button
+					class="perm-modal__btn perm-modal__btn--cancel"
+					type="button"
+					onclick={ templ.ComponentScript{Call: fmt.Sprintf("closePermModal('%v')", editUser.ID)} }
+				>
+					Cancel
+				</button>
+				<button
+					class="perm-modal__btn perm-modal__btn--save"
+					id={ fmt.Sprintf("perm-save-btn-%v", editUser.ID) }
+					type="button"
+					onclick={ templ.ComponentScript{Call: fmt.Sprintf("savePermissions('%v')", editUser.ID)} }
+					disabled
+				>
+					Save Changes
+				</button>
+			</div>
+		</div>
+	</div>
+
+	<!-- Per-user state initialisation -->
+  <div
+    class="perm-editor-init"
+    data-user-id={ fmt.Sprintf("%v", editUser.ID) }
+    data-original-perms={ permissionsAsJSON(editUser.Permissions) }
+  ></div>
+
+  <script>
+    (function() {
+      var el = document.currentScript.previousElementSibling;
+      var uid = el.dataset.userId;
+      var originalPerms = JSON.parse(el.dataset.originalPerms);
+      initPermEditor(uid, originalPerms);
+    })();
+  </script>
+	// <script>
+	// 	(function() {
+	// 		var uid = { fmt.Sprintf("%v", editUser.ID) };
+	// 		var originalPerms = { permissionsAsJSON(editUser.Permissions) };
+	// 		initPermEditor(uid, originalPerms);
+	// 	})();
+	// </script>
+}

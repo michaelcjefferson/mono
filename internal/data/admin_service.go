@@ -184,3 +184,31 @@ func buildUserFilters(filters UserFilters, includeFTS bool) (string, []any) {
 
 	return " AND " + strings.Join(parts, " AND "), args
 }
+
+func (s *AdminService) UpdateForUserID(ctx context.Context, removePerms, newPerms []Permission, userID int64) error {
+	tx, err := s.Users.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if removePerms != nil {
+		err = s.Permissions.DeleteManyForUserID(tx, ctx, removePerms, userID)
+
+		if err != nil {
+			return ProcessSQLError(err, "failed to remove perms for user")
+		}
+	}
+
+	if newPerms != nil {
+		err = s.Permissions.InsertManyForUserID(tx, ctx, newPerms, userID)
+
+		if err != nil {
+			return ProcessSQLError(err, "failed to insert perms for user")
+		}
+	}
+
+	err = tx.Commit()
+
+	return err
+}

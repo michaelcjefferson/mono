@@ -12,6 +12,9 @@ import (
 
 templ UsersPage(users []*data.User, u *data.User, metadata *data.FilterMetadata, filters *data.UserFilters, isAdmin, showNav bool) {
   @views.Authenticated(u, isAdmin, showNav) {
+    <script src="/js/permission_editor_modal.js"></script>
+    <link rel="stylesheet" href="/css/permission_editor_modal.css"/>
+
     // <h2 class="header">Users Page</h2>
     if showNav {
       @admincomponents.NavBar()
@@ -109,9 +112,13 @@ templ UsersPage(users []*data.User, u *data.User, metadata *data.FilterMetadata,
                     <a href={ templ.SafeURL(fmt.Sprintf("/admin/users/%v", user.ID)) } class="user-card__action-btn user-card__action-btn--secondary">
                       View Activity
                     </a>
-                    <a href={ templ.SafeURL(fmt.Sprintf("/admin/users/%v/permissions", user.ID)) } class="user-card__action-btn user-card__action-btn--secondary">
+                    // <a href={ templ.SafeURL(fmt.Sprintf("/admin/users/%v/permissions", user.ID)) } class="user-card__action-btn user-card__action-btn--secondary edit-permissions-button">
+                    //   Edit Permissions
+                    // </a>
+                    <button class="user-card__action-btn user-card__action-btn--secondary edit-permissions-button" onclick={ templ.JSFuncCall("openPermModal", user.ID) }>
                       Edit Permissions
-                    </a>
+                    </button>
+                    @admincomponents.PermissionModal(*user, u)
                     if user.ID != u.ID {
                       <button
                         id={ fmt.Sprintf("delete-user-button-%v", user.ID) }
