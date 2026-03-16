@@ -82,7 +82,7 @@ templ SignInForm() {
               headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
-                "X-CSRF-Token": csrfToken
+                'X-CSRF-Token': csrfToken
               },
               body: JSON.stringify({
                 usernameOrEmail: this.form.usernameOrEmail,

@@ -13,12 +13,14 @@ templ GoogleAuthButton() {
 
   <script>
     document.getElementById("google-auth-button").addEventListener("click", async function(event) {
+      const csrfToken = getCSRFCookie('_csrf')
       let res = await fetch('/oauth/google', {
         method: 'GET',
         // credentials: 'include',
         redirect: 'follow',
         headers: {
-          "Accept": "application/json"
+          'Accept': 'application/json',
+          'X-CSRF-Token': csrfToken
         }
       });
 

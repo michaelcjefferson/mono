@@ -235,9 +235,15 @@ async function savePermissions(userId) {
   hideErrorBanner(userId);
 
   try {
+    const csrfToken = getCSRFCookie('_csrf')
     const response = await fetch(`/admin/users/${userId}/permissions`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        // Ensure that a json api response is returned (used in toast error notification)
+        'Accept': 'application/json',
+        'X-CSRF-Token': csrfToken
+      },
       body: JSON.stringify({
         new_perms: toAdd,
         remove_perms: toRemove,
@@ -248,7 +254,7 @@ async function savePermissions(userId) {
       let errMsg = 'Failed to update permissions. Changes have been reverted.';
       try {
         const errBody = await response.json();
-        if (errBody.error) errMsg = errBody.error;
+        errMsg = errBody?.error?.message ?? errMsg;
       } catch (_) {}
       throw new Error(errMsg);
     }
@@ -260,14 +266,17 @@ async function savePermissions(userId) {
     updateCardPermissionSummary(userId, state.currentPerms);
 
     closePermModal(userId);
-
+    
+    Alpine.store('toast').success('Permissions saved successfully.');
   } catch (err) {
     // Revert UI to originalPerms
     renderPermState(userId, state.originalPerms);
     state.currentPerms = [...state.originalPerms];
     updateChangesBanner(userId);
     updateSaveBtn(userId);
-    showErrorBanner(userId, err.message);
+    // showErrorBanner(userId, err.message);
+    Alpine.store('toast').error(err);
+    // Alpine.store('toast').error('Failed to update permissions. Changes have been reverted.');
   } finally {
     saveBtn.classList.remove('is-loading');
   }

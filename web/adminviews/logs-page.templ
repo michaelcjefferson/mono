@@ -92,7 +92,14 @@ templ LogsPage(logs []*logging.Log, metadata *data.LogsMetadata, filters *data.L
 
       document.getElementById("confirm-delete").addEventListener("click", async () => {
         try {
-          const res = await fetch("/admin/logs/" + logIDToDelete, { method: "DELETE" });
+          const csrfToken = getCSRFCookie('_csrf')
+          const res = await fetch("/admin/logs/" + logIDToDelete, {
+            method: 'DELETE',
+            headers: {
+              'Accept': 'application/json',
+              'X-CSRF-Token': csrfToken
+            }
+          });
 
           if (res.redirected) {
             // Get the redirect URL from the Location header

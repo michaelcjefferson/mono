@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"placeholder_project_tag/internal/data"
@@ -243,6 +244,11 @@ func (app *application) requirePermissionCode(permission data.Permission) echo.M
 				if permission == data.PermissionAdminAccess {
 					return echo.NewHTTPError(http.StatusNotFound)
 				} else {
+					// Return API response if that's what the request is expecting
+					if strings.Contains(c.Request().Header.Get("Accept"), "application/json") {
+						return app.errorAPIResponse(c, nil, apperrors.ErrCodeResourceForbidden, nil)
+					}
+					// Render generic error page in other cases
 					return app.errorHTTPResponse(c, nil, apperrors.ErrCodeResourceForbidden, nil)
 				}
 			}

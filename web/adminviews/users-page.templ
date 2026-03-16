@@ -183,7 +183,14 @@ templ UsersPage(users []*data.User, u *data.User, metadata *data.FilterMetadata,
 
       document.getElementById("confirm-delete").addEventListener("click", async (id) => {
         try {
-          const res = await fetch("/admin/users/" + userIDToDelete, { method: "DELETE" });
+          const csrfToken = getCSRFCookie('_csrf')
+          const res = await fetch("/admin/users/" + userIDToDelete, {
+            method: "DELETE",
+            headers: {
+              'Accept': 'application/json',
+              'X-CSRF-Token': csrfToken
+            }
+          });
 
           if (res.redirected) {
             // Get the redirect URL from the Location header

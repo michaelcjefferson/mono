@@ -64,7 +64,7 @@ templ UsernamePage(u *data.User) {
                 headers: {
                   'Content-Type': 'application/json',
                   'Accept': 'application/json',
-                  "X-CSRF-Token": csrfToken
+                  'X-CSRF-Token': csrfToken
                 },
                 body: JSON.stringify({
                   username: this.form.username
