@@ -1,12 +1,14 @@
 package validator
 
 import (
+	"errors"
 	"regexp"
 	"slices"
 	"strconv"
 )
 
 var (
+	ErrFailedValidation = errors.New("some data in the request did not pass validation")
 	// This regex allows email addresses with no dot in the DNS, eg. user@gmail, because there are some valid DNS's without a dot so it is technically a valid email address.
 	EmailRX = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 	// ASCII letters + numbers, start with a letter, single separators (_ or .)
