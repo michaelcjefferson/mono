@@ -2,6 +2,7 @@ package views
 
 import (
   "placeholder_project_tag/internal/data"
+  "placeholder_project_tag/web/components"
 )
 
 templ UsernamePage(u *data.User) {
@@ -37,6 +38,7 @@ templ UsernamePage(u *data.User) {
           <span x-show="!loading">Save</span>
           <span x-show="loading">Saving...</span>
         </button>
+        @components.LinkButton("/", "Back")
       </form>
     </div>
 
@@ -73,7 +75,7 @@ templ UsernamePage(u *data.User) {
 
               const data = await res.json();
 
-              console.log(data);
+              // console.log(data);
 
               if (!res.ok) {
                 this.handleError(data.error);
@@ -82,7 +84,7 @@ templ UsernamePage(u *data.User) {
 
               // Success
               this.$store.toast.success('Saved username successfully!');
-              
+
               // Redirect after short delay to show success message
               setTimeout(() => {
                 if (data.redirect) {
@@ -114,7 +116,7 @@ templ UsernamePage(u *data.User) {
                 this.errors.username = 'This username is already taken';
                 this.$store.toast.error('Username unavailable');
                 break;
-              
+
               default:
                 this.$store.toast.error(error.message || 'Username update failed. Please try again.');
             }
@@ -123,7 +125,7 @@ templ UsernamePage(u *data.User) {
 
           mapServerErrors(serverErrors) {
             const mapped = {};
-            
+
             // Map server field names to client field names
             const fieldMap = {
               'username': 'username'

@@ -7,7 +7,7 @@ services:
         PROJECT_NAME: ${PROJECT_NAME}
       context: ./
       dockerfile: ./deployments/docker/api-service.dockerfile
-    restart: always
+    restart: unless-stopped
     ports:
       - 8084:8084
     env_file:
