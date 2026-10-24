@@ -25,21 +25,23 @@ tasks:
   up:
     desc: Build all app files and start development environment in Docker container
     cmds:
+      - task: env-setup
+      - task: down
       - task: build:templates
       - task: build:migrations
       - echo "Starting dev docker environment..."
       - direnv exec . docker compose up --build -d
-    deps: [env-setup, down]
     silent: true
 
   up:remote:
     desc: Build and push app files to remote docker context and run them
     cmds:
+      - task: env-setup
+      - task: down:remote
       - task: build:templates
       - task: build:migrations
       - echo "Starting remote dev docker environment..."
       - direnv exec . docker --context ${REMOTE_CONTEXT} compose up --build -d
-    deps: [env-setup, down:remote]
     silent: true
 
   run:api:
@@ -147,6 +149,26 @@ tasks:
       - migrate create -seq -ext=.sql -dir=./db/monitor/migrations {{.NAME}}
     silent: true
 
+  push-db:remote:
+    desc: Copy local SQLite database (app db only - not monitor) to remote Docker context
+    cmds:
+      - echo "Stopping remote service..."
+      - docker --context ${REMOTE_CONTEXT} compose stop api-service
+      - echo "Copying database..."
+      - docker --context ${REMOTE_CONTEXT} compose cp ${APP_DB_PATH} api-service:/app/db/app.db
+      - echo "Restarting remote service..."
+      - docker --context ${REMOTE_CONTEXT} compose start api-service
+      - echo "Database updated successfully"
+    silent: true
+
+  pull-db:remote:
+    desc: Copy SQLite database from remote Docker context to local environment
+    cmds:
+      - echo "Pulling database from remote..."
+      - docker --context ${REMOTE_CONTEXT} compose cp api-service:/app/db/app.db ${APP_DB_PATH}
+      - echo "Database pulled successfully to ${DB_PATH}"
+    silent: true
+
   # =============================================== #
   # QUALITY CONTROL
   # =============================================== #
@@ -162,7 +184,7 @@ tasks:
       - go test -race -vet=off ./...
     deps:
       - vendor
-  
+
   vendor:
     desc: Tidy go project, and store source code for dependencies in vendor folder
     cmds:
@@ -272,7 +294,6 @@ tasks:
 
   check-templ:
     desc: "Check for templ (go html templating) and install it if missing"
-    # dir: "{{.USER_WORKING_DIR}}"
     cmds:
       - |
         if ! command -v templ &> /dev/null; then
@@ -292,7 +313,6 @@ tasks:
 
   check-migrate:
     desc: "Check for migrate (db migrations) and install it if missing"
-    # dir: "{{.USER_WORKING_DIR}}"
     cmds:
       - |
         if ! command -v migrate &> /dev/null; then

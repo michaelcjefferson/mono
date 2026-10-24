@@ -35,8 +35,8 @@ export ADMIN_INIT_KEY=change-this-each-time-app-is-generated
 # Google
 export GOOGLE_CLIENT_ID=id
 export GOOGLE_CLIENT_SECRET=secret
-# export GOOGLE_REDIRECT_URL=https://localhost/oauth/google/callback
-export GOOGLE_REDIRECT_URL=${DOMAIN_MAIN}:${API_PORT}/oauth/google/callback
+export GOOGLE_REDIRECT_URL=${DOMAIN_MAIN}/oauth/google/callback
+# export GOOGLE_REDIRECT_URL=${DOMAIN_MAIN}:${API_PORT}/oauth/google/callback
 
 # Logging
 export LOG_LEVEL=1
