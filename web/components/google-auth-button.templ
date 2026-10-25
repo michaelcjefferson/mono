@@ -39,7 +39,7 @@ templ GoogleAuthButton() {
         console.log('Got google auth.');
       } else {
         // If it's not a redirect or successful response, check for JSON error
-        console.error('Logout error:', j.error);
+        console.error('Google auth error:', j.error);
       }
       if (j.redirect) {
         window.location.href = j.redirect;
