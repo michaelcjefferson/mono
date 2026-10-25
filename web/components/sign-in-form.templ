@@ -7,17 +7,17 @@ templ SignInForm() {
       <!-- Username/Email field -->
       <div class="form-field">
         <label for="username-or-email">Username/Email</label>
-        <input 
-          type="text" 
-          id="username-or-email" 
-          name="username-or-email" 
+        <input
+          type="text"
+          id="username-or-email"
+          name="username-or-email"
           x-model="form.usernameOrEmail"
           :class="{'error': errors.usernameOrEmail}"
           @input="clearFieldError('usernameOrEmail')"
           required
         />
-        <span 
-          x-show="errors.username" 
+        <span
+          x-show="errors.username"
           x-text="errors.username"
           class="field-error"
         ></span>
@@ -26,17 +26,17 @@ templ SignInForm() {
       <!-- Password field -->
       <div class="form-field">
         <label for="password">Password</label>
-        <input 
-          type="password" 
-          id="password" 
+        <input
+          type="password"
+          id="password"
           name="password"
           x-model="form.password"
           :class="{'error': errors.password}"
           @input="clearFieldError('password')"
           required
         />
-        <span 
-          x-show="errors.password" 
+        <span
+          x-show="errors.password"
           x-text="errors.password"
           class="field-error"
         ></span>
@@ -51,7 +51,7 @@ templ SignInForm() {
       </button>
     </form>
 
-    @AuthDivider()
+    @OptionDivider()
 
     @LinkButton("/register", "Register")
   </div>
@@ -101,7 +101,7 @@ templ SignInForm() {
 
             // Success
             this.$store.toast.success('Signed in successfully!');
-            
+
             // Redirect after short delay to show success message
             setTimeout(() => {
               if (data.redirect) {
@@ -128,7 +128,7 @@ templ SignInForm() {
               }
               this.$store.toast.error(error.message || 'Please fix the errors below');
               break;
-            
+
             default:
               this.$store.toast.error(error.message || 'Sign in failed. Please try again.');
           }
@@ -137,7 +137,7 @@ templ SignInForm() {
 
         mapServerErrors(serverErrors) {
           const mapped = {};
-          
+
           // Map server field names to client field names
           const fieldMap = {
             'usernameOrEmail': 'usernameOrEmail',

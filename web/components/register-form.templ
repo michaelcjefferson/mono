@@ -7,17 +7,17 @@ templ RegisterForm() {
       <!-- Username field -->
       <div class="form-field">
         <label for="username">Username</label>
-        <input 
-          type="text" 
-          id="username" 
-          name="username" 
+        <input
+          type="text"
+          id="username"
+          name="username"
           x-model="form.username"
           :class="{'error': errors.username}"
           @input="clearFieldError('username')"
           required
         />
-        <span 
-          x-show="errors.username" 
+        <span
+          x-show="errors.username"
           x-text="errors.username"
           class="field-error"
         ></span>
@@ -26,17 +26,17 @@ templ RegisterForm() {
       <!-- Email field -->
       <div class="form-field">
         <label for="email">Email</label>
-        <input 
-          type="email" 
-          id="email" 
+        <input
+          type="email"
+          id="email"
           name="email"
           x-model="form.email"
           :class="{'error': errors.email}"
           @input="clearFieldError('email')"
           required
         />
-        <span 
-          x-show="errors.email" 
+        <span
+          x-show="errors.email"
           x-text="errors.email"
           class="field-error"
         ></span>
@@ -45,17 +45,17 @@ templ RegisterForm() {
       <!-- Password field -->
       <div class="form-field">
         <label for="password">Password</label>
-        <input 
-          type="password" 
-          id="password" 
+        <input
+          type="password"
+          id="password"
           name="password"
           x-model="form.password"
           :class="{'error': errors.password}"
           @input="clearFieldError('password')"
           required
         />
-        <span 
-          x-show="errors.password" 
+        <span
+          x-show="errors.password"
           x-text="errors.password"
           class="field-error"
         ></span>
@@ -64,17 +64,17 @@ templ RegisterForm() {
       <!-- Confirm Password field -->
       <div class="form-field">
         <label for="confirm-password">Confirm Password</label>
-        <input 
-          type="password" 
-          id="confirm-password" 
+        <input
+          type="password"
+          id="confirm-password"
           name="confirm-password"
           x-model="form.confirmPassword"
           :class="{'error': errors.confirmPassword}"
           @input="clearFieldError('confirmPassword')"
           required
         />
-        <span 
-          x-show="errors.confirmPassword" 
+        <span
+          x-show="errors.confirmPassword"
           x-text="errors.confirmPassword"
           class="field-error"
         ></span>
@@ -89,7 +89,7 @@ templ RegisterForm() {
       </button>
     </form>
 
-    @AuthDivider()
+    @OptionDivider()
 
     @LinkButton("/sign-in", "Sign In")
   </div>
@@ -149,7 +149,7 @@ templ RegisterForm() {
 
             // Success
             this.$store.toast.success('Account created successfully!');
-            
+
             // Redirect after short delay to show success message
             setTimeout(() => {
               if (data.redirect) {
@@ -176,17 +176,17 @@ templ RegisterForm() {
               }
               this.$store.toast.error(error.message || 'Please fix the errors below');
               break;
-            
+
             case 'USER_EXISTS':
               this.errors.email = 'An account with this email already exists';
               this.$store.toast.error('Email already registered');
               break;
-            
+
             case 'USERNAME_TAKEN':
               this.errors.username = 'This username is already taken';
               this.$store.toast.error('Username unavailable');
               break;
-            
+
             default:
               this.$store.toast.error(error.message || 'Registration failed. Please try again.');
           }
@@ -195,7 +195,7 @@ templ RegisterForm() {
 
         mapServerErrors(serverErrors) {
           const mapped = {};
-          
+
           // Map server field names to client field names
           const fieldMap = {
             'username': 'username',

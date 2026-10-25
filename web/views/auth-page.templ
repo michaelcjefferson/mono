@@ -10,13 +10,13 @@ templ AuthPage(formType string) {
       <h2 class="header">Register</h2>
       <p>It's magic here.</p>
       @components.GoogleAuthButton()
-      @components.AuthDivider()
+      @components.OptionDivider()
       @components.RegisterForm()
     } else if formType == "sign-in" {
       <h2 class="header">Sign In</h2>
       <p>Get involved.</p>
       @components.GoogleAuthButton()
-      @components.AuthDivider()
+      @components.OptionDivider()
       @components.SignInForm()
     }
   }

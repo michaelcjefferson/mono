@@ -279,7 +279,7 @@ nav a.active {
   flex-direction: column;
 }
 
-.auth-divider {
+.option-divider {
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -291,7 +291,7 @@ nav a.active {
   letter-spacing: 0.08em;
 }
 
-.auth-divider .auth-divider-line {
+.option-divider .option-divider-line {
   flex: 1;
   height: 1px;
   background: linear-gradient(
